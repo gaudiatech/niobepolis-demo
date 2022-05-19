@@ -1,0 +1,9 @@
+@echo off
+d:
+CD d:\OpusMagnum\unstable-niobe\niobepolis\
+
+MKLINK /D katagames_engine ..\..\kengi-repo\src\katagames_engine
+
+ECHO "link to kengi ADDED"
+
+PAUSE
