@@ -11,7 +11,7 @@ FPS_PBGE = 30
 pygame = kengi.pygame
 screen = None
 tilemap = tilemap2 = None
-pbge = kengi.polarbear
+# pbge = kengi.polarbear
 
 
 def get_maps():
@@ -40,7 +40,7 @@ keep_going = True
 def game_enter():
     global screen, tilemap, avatar_m, viewer
     kengi.init('old_school')
-    
+
     screen = kengi.get_surface()
     with open('xassets\\test_map.json', 'r') as ff:
         jdict = json.load(ff)
@@ -77,35 +77,36 @@ def game_enter():
 def game_update():
     global keep_going
 
-    gdi = pbge.wait_event()
-    viewer.check_event(gdi)
+    # gdi = pbge.wait_event()
+    for gdi in pygame.event.get():
+        viewer.check_event(gdi)
 
-    if gdi.type == pbge.TIMEREVENT:
-        viewer()
-        kengi.flip()
+        if gdi.type == pygame.USEREVENT:  # pbge.TIMEREVENT:
+            viewer()
+            kengi.flip()
 
-    elif gdi.type == pygame.MOUSEBUTTONDOWN:
-        mouse_x, mouse_y = kengi.core.proj_to_vscreen(pygame.mouse.get_pos())
-        tx, ty = viewer.map_x(mouse_x, mouse_y, return_int=False), viewer.map_y(mouse_x, mouse_y, return_int=False)
-        print(tx, ty)
-        avatar_m.x, avatar_m.y = tx, ty
-        # print(viewer.relative_x(0, 0), viewer.relative_y(0, 0))
-        # print(viewer.relative_x(0, 19), viewer.relative_y(0, 19))
+        elif gdi.type == pygame.MOUSEBUTTONDOWN:
+            mouse_x, mouse_y = kengi.core.proj_to_vscreen(pygame.mouse.get_pos())
+            tx, ty = viewer.map_x(mouse_x, mouse_y, return_int=False), viewer.map_y(mouse_x, mouse_y, return_int=False)
+            print(tx, ty)
+            avatar_m.x, avatar_m.y = tx, ty
+            # print(viewer.relative_x(0, 0), viewer.relative_y(0, 0))
+            # print(viewer.relative_x(0, 19), viewer.relative_y(0, 19))
 
-    elif gdi.type == pygame.KEYDOWN:
-        if gdi.key == pygame.K_ESCAPE:
+        elif gdi.type == pygame.KEYDOWN:
+            if gdi.key == pygame.K_ESCAPE:
+                keep_going = False
+            elif gdi.key == pygame.K_d and avatar_m.x < tilemap.width - 1.5:
+                avatar_m.x += 0.1
+            elif gdi.key == pygame.K_a and avatar_m.x > -1:
+                avatar_m.x -= 0.1
+            elif gdi.key == pygame.K_w and avatar_m.y > -1:
+                avatar_m.y -= 0.1
+            elif gdi.key == pygame.K_s and avatar_m.y < tilemap.height - 1.5:
+                avatar_m.y += 0.1
+
+        elif gdi.type == pygame.QUIT:
             keep_going = False
-        elif gdi.key == pygame.K_d and avatar_m.x < tilemap.width - 1.5:
-            avatar_m.x += 0.1
-        elif gdi.key == pygame.K_a and avatar_m.x > -1:
-            avatar_m.x -= 0.1
-        elif gdi.key == pygame.K_w and avatar_m.y > -1:
-            avatar_m.y -= 0.1
-        elif gdi.key == pygame.K_s and avatar_m.y < tilemap.height - 1.5:
-            avatar_m.y += 0.1
-
-    elif gdi.type == pygame.QUIT:
-        keep_going = False
 
 
 if __name__ == '__main__':
