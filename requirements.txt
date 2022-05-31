@@ -1,2 +1,3 @@
-pygame==2.1.0
-kengi>=22.4a2
+pygame>=2.1.0
+kengi>=22.5a2
+katasdk>=0.0.8
