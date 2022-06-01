@@ -58,7 +58,7 @@ def build_console(screen):
         key_calls={},
         vari={"A": 100, "B": 200, "C": 300},
         syntax={re_function: console_func},
-        fontobj=kengi.gui.ImgBasedFont('niobepolis/myassets/gibson1_font.png', CON_FONT_COLOR)  # new ft system
+        fontobj=kengi.gui.ImgBasedFont('niobepolis/assets/gibson1_font.png', CON_FONT_COLOR)  # new ft system
     )
     ingame_console.set_motd('-Niobe Polis CONSOLE rdy-\n type "help" if needed')
 
@@ -362,13 +362,13 @@ def load_isometric_map(csv=False):
     if not webctx():
         # classic way to load map --
         print('load isometric map from regular .JSON')
-        with open('niobepolis/myassets/test_map.json', 'r') as ff:
+        with open('niobepolis/assets/test_map0.json', 'r') as ff:
             jdict = json.load(ff)
     else:
         # alternative way: from frozen json
         jdict = json.loads(get_frozen_json_txt())
 
-    return kengi.isometric.IsometricMap.from_json_dict(['niobepolis', 'myassets', ], jdict)
+    return kengi.isometric.IsometricMap.from_json_dict(['niobepolis', 'assets', ], jdict)
 
 
 def init_tilemap_etc(screen):
@@ -491,8 +491,8 @@ class Character(kengi.isometric.IsometricMapObject):
         self.x = x
         self.y = y
 
-        self.surf = pygame.image.load("niobepolis/myassets/sys_icon.png").convert_alpha()
-        self.ht = pygame.image.load("niobepolis/myassets/half-floor-tile.png").convert_alpha()
+        self.surf = pygame.image.load("niobepolis/assets/sys_icon.png").convert_alpha()
+        self.ht = pygame.image.load("niobepolis/assets/half-floor-tile.png").convert_alpha()
         self.ht.set_colorkey((255, 0, 255))
         # self.surf.set_colorkey((0,0,255))
         self.ox = self.oy = 0

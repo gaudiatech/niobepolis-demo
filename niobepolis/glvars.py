@@ -8,9 +8,9 @@ interruption = None  # used to change cartridge
 MAXFPS = 45
 
 PALIAS = {
-    'greetings': 'niobepolis/myassets/greetings.png',
-    'tilefloor': 'niobepolis/myassets/floor-tile.png',
-    'gridsystem': 'niobepolis/myassets/grid-system.png',
+    'greetings': 'niobepolis/assets/greetings.png',
+    'tilefloor': 'niobepolis/assets/floor-tile.png',
+    'gridsystem': 'niobepolis/assets/grid-system.png',
 }
 
 # VARIABLES

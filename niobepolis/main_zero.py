@@ -20,8 +20,8 @@ katasdk.bootstrap(0)
 import katagames_engine as kengi
 kengi.bootstrap_e()
 
-from declarations import init_tilemap_etc, ExtraLayerView, ExtraGuiLayerCtrl, vStateMockup, build_console
-import declarations  # to access variables in this scope
+from declarations_zero import init_tilemap_etc, ExtraLayerView, ExtraGuiLayerCtrl, vStateMockup, build_console
+import declarations_zero  # to access variables in this scope
 from niobepolis import debug_tool
 
 import time
@@ -52,12 +52,12 @@ def game_enter(vmstate):
     init_tilemap_etc(scr)
     build_console(scr)  # sets declarations.ingame_console
 
-    extra_gui_v = ExtraLayerView(declarations.ingame_console)
-    extra_gui_ctrl = ExtraGuiLayerCtrl(declarations.ingame_console)
+    extra_gui_v = ExtraLayerView(declarations_zero.ingame_console)
+    extra_gui_ctrl = ExtraGuiLayerCtrl(declarations_zero.ingame_console)
     for elk in (extra_gui_v, extra_gui_ctrl):
         elk.turn_on()
 
-    debug_v = debug_tool.DebugV(declarations.isomap_viewer, declarations.ingame_console)
+    debug_v = debug_tool.DebugV(declarations_zero.isomap_viewer, declarations_zero.ingame_console)
 
     debug_v.turn_on()
 
