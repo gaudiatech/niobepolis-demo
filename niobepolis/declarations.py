@@ -1,13 +1,10 @@
 import json
 import re
-import glvars
-import oldfunc
 
 import katagames_engine as kengi
-kengi.bootstrap_e()
-
 import katagames_sdk as katasdk
-katasdk.bootstrap(0)  # a trick so we dont use the deprecated version of kengi that ships with katasdk
+
+import glvars
 
 
 # - aliases
@@ -15,10 +12,21 @@ pygame = kengi.pygame
 ReceiverObj = kengi.event.EventReceiver
 EngineEvTypes = kengi.event.EngineEvTypes
 
-# global var. (scope: current script)
+# variables for the current script)
+ingame_console = None
 binded_state = None
+isomap_viewer = None
+to_edit = None
+my_x, my_y = 0, 0  # old offset for using the camera (deprecated, I think)
+posdecor = list()
+vscr_size = None
+strcutter = False
+leaving_niobe = False
 
-# - const
+# - constants
+CODE_GRASS = 203  # deprecated
+BG_COLOR = (40, 40, 68)
+CON_FONT_COLOR = (13, 253, 8)
 WARP_BACK = [2, 'editor']
 
 
@@ -41,8 +49,9 @@ def get_frozen_json_txt():
 
 
 def build_console(screen):
+    global ingame_console
     screensize = screen.get_size()
-    r = kengi.console.CustomConsole(
+    ingame_console = kengi.console.CustomConsole(
         screen,
         (0, 0, screensize[0], int(0.9 * screensize[1])),  # takes up 90% of the scr height
         functions=listing_all_console_func,
@@ -51,8 +60,7 @@ def build_console(screen):
         syntax={re_function: console_func},
         fontobj=kengi.gui.ImgBasedFont('niobepolis/myassets/gibson1_font.png', CON_FONT_COLOR)  # new ft system
     )
-    r.set_motd('-Niobe Polis CONSOLE rdy-\n type "help" if needed')
-    return r
+    ingame_console.set_motd('-Niobe Polis CONSOLE rdy-\n type "help" if needed')
 
 
 # --------- ignore this code, its just to un-break things
@@ -85,11 +93,8 @@ def console_func(console, match):
 
 
 # --------------- implem of console functions, docstrings are used for help ------------------START
-strcutter = False
-
-
 def _gencb(x):
-    global browser_res, browser_wait, ingame_console, strcutter
+    global browser_res, browser_wait, strcutter
     browser_res = x
     browser_wait = False
     if strcutter:
@@ -214,9 +219,6 @@ def size():
     return str(w) + ' ' + str(h)
 
 
-to_edit = None
-
-
 def cedit(cname):  # -------------------- experimental ----------------
     """
     Edit cartridge code. Use: edit cartname
@@ -243,9 +245,6 @@ def cedit(cname):  # -------------------- experimental ----------------
     else:
         to_edit = cname
         return f'editor opens {cname}...'
-
-
-leaving_niobe = False
 
 
 def erase(cname):
@@ -325,11 +324,6 @@ else:
 
 # --------------- implem of console functions, docstrings are used for help ------------------END
 
-CON_FONT_COLOR = (13, 253, 8)
-ingame_console = None
-# ---------- managing the console --------------end
-
-
 # - charge tuiles syndicate, exploite un mapping code <> surface contenant tile image -
 # we need to do it in a stupid way,
 # due to how the ROM pseudo-compil works (=>detects raw strings for filepaths, moves assets)
@@ -349,14 +343,6 @@ ingame_console = None
 #
 #     for obj in code2tile_map.values():
 #         obj.set_colorkey('#ff00ff')
-
-
-CODE_GRASS = 203
-BG_COLOR = (40, 40, 68)
-my_x, my_y = 0, 0  # comme un offset purement 2d -> utile pr camera
-
-posdecor = list()
-vscr_size = None
 
 
 class ExtraLayerView(ReceiverObj):
@@ -386,7 +372,7 @@ def load_isometric_map(csv=False):
 
 
 def init_tilemap_etc(screen):
-    global tilemap, avatar_m, viewer
+    global tilemap, avatar_m, isomap_viewer
     global mger, lu_event, paint_event, wctrl
 
     tilemap = load_isometric_map(csv=True)
@@ -399,14 +385,14 @@ def init_tilemap_etc(screen):
     # add the avatar to the map
     list(tilemap.objectgroups.values())[0].contents.append(avatar_m)
 
-    viewer = kengi.isometric.IsometricMapViewer(
+    isomap_viewer = kengi.isometric.IsometricMapViewer(
         tilemap, screen,
         up_scroll_key=pygame.K_UP,
         down_scroll_key=pygame.K_DOWN,
         left_scroll_key=pygame.K_LEFT,
         right_scroll_key=pygame.K_RIGHT
     )
-    viewer.turn_on()
+    isomap_viewer.turn_on()
     # debugviewer = DebugV()
     # debugviewer.turn_on()
 
@@ -416,7 +402,7 @@ def init_tilemap_etc(screen):
     # viewer.cursor = kengi.isometric.IsometricMapQuarterCursor(0, 0, cursor_image, tilemap.layers[1])
 
     # camera focus avatar
-    viewer.set_focused_object(avatar_m)
+    isomap_viewer.set_focused_object(avatar_m)
     avatar_m.x += 1  # center the camera, now
 
     # chunk taken from PBGE, also it sets key repeat freq.
@@ -434,6 +420,8 @@ def init_tilemap_etc(screen):
 class ExtraGuiLayerCtrl(ReceiverObj):
     def __init__(self, cons):
         super().__init__()
+        if cons is None:
+            raise ValueError('need a real instance of ingame console')
         self.console = cons
 
     def proc_event(self, ev, source=None):
@@ -453,10 +441,10 @@ class ExtraGuiLayerCtrl(ReceiverObj):
             if ev.key == pygame.K_F1:
                 if not self.console.active:
                     self.console.activate()
-                    viewer.pause_draw()
+                    isomap_viewer.pause_draw()
                 else:
                     self.console.desactivate()
-                    viewer.resume_draw()
+                    isomap_viewer.resume_draw()
 
             # TODO active console has to block key press, in the new system TOO!
             # example (old system):
@@ -521,7 +509,7 @@ class WorldCtrl(ReceiverObj):
         super().__init__()
 
     def proc_event(self, ev, source=None):
-        global keep_going, viewer
+        global keep_going, isomap_viewer
 
         if ev.type == EngineEvTypes.LOGICUPDATE:
             pass

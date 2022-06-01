@@ -1,3 +1,4 @@
+import katagames_engine as kengi
 
 
 my_x, my_y = 0, 0  # comme un offset purement 2d -> utile pr camera
@@ -12,6 +13,9 @@ def gridbased_2d_disp(screen, grid_spec, coords, ref_img):
 
 def realise_pavage(screen, gfx_elt, offsets=(0, 0)):
     global vscr_size
+    if vscr_size is None:
+        vscr_size = kengi.get_surface().get_size()
+
     incx, incy = gfx_elt.get_size()  # 64*32 pour floortile
     for y in range(0, vscr_size[1], incy):
         for x in range(0, vscr_size[0], incx):
