@@ -126,6 +126,9 @@ class BasicCtrl(kengi.event.EventReceiver):
                 if cursor:
                     cursor.update(map_viewer, gdi)
                 if gdi.type == pygame.MOUSEBUTTONUP and gdi.button == 1:
+                    #TODO: There are some glitches in the movement system, when the player character will not move to
+                    # a tile that has been clicked. It generally happens with tiles that are adjacent to the PC's
+                    # current position, but it doesn't happen all the time. I will look into this later.
                     current_path = MovementPath(mypc, map_viewer.cursor.get_pos(), maps[current_tilemap])
                     if DEBUG:
                         print('movement path has been set')
@@ -190,6 +193,10 @@ def _load_maps():
         isometric_maps.IsometricMap.load('assets/test_map2.tmx')
     )
     tilemap_width, tilemap_height = maps[0].width, maps[0].height
+    maps[0].wrap_x = True
+    maps[0].wrap_y = True
+    #maps[1].wrap_x = True
+    #maps[1].wrap_y = True
 
 
 def _add_map_entities(gviewer):
@@ -234,6 +241,7 @@ def _init_specific_stuff():
 def run_game():
     _init_specific_stuff()
     gctrl = kengi.get_game_ctrl()
+
     gctrl.turn_on()
     gctrl.loop()
     kengi.quit()
