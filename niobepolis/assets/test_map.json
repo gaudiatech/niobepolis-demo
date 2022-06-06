@@ -19,17 +19,6 @@
          "y":0
         }, 
         {
-         "draworder":"topdown",
-         "id":5,
-         "name":"Object Layer 1",
-         "objects":[],
-         "opacity":1,
-         "type":"objectgroup",
-         "visible":true,
-         "x":0,
-         "y":0
-        }, 
-        {
          "compression":"zlib",
          "data":"eJxjZmBgYGagPuAiQg0t7CXGThimt73I9Eixl552cw2Qveh2UcNeYvIPzK6BSs8DaS+9wUDZC7N7IOwcbvayAzErA0MDPrtpAVhpZO4oGNyACYgBexQBEg==",
          "encoding":"base64",
@@ -40,6 +29,19 @@
          "type":"tilelayer",
          "visible":true,
          "width":30,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "draworder":"topdown",
+         "id":5,
+         "name":"Object Layer 1",
+         "objects":[],
+         "offsetx":0,
+         "offsety":-8,
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
          "x":0,
          "y":0
         }, 
@@ -158,6 +160,17 @@
  "nextlayerid":11,
  "nextobjectid":2,
  "orientation":"isometric",
+ "properties":[
+        {
+         "name":"wrap_x",
+         "type":"bool",
+         "value":true
+        }, 
+        {
+         "name":"wrap_y",
+         "type":"bool",
+         "value":false
+        }],
  "renderorder":"right-down",
  "tiledversion":"1.8.4",
  "tileheight":32,

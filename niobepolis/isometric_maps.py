@@ -455,6 +455,12 @@ class IsometricMap():
                     # objectgroup's frame of reference.
                     tilemap.layers.append(IsometricLayer.emptylayer("The Mysterious Empty Layer", tilemap))
                 tilemap.objectgroups[tilemap.layers[-1]] = ObjectGroup.fromxml(tag, tilemap.layers[-1], object_fun)
+            elif tag.tag == "properties":
+                for ptag in tag.findall("property"):
+                    if ptag.get("name") == "wrap_x":
+                        tilemap.wrap_x = ptag.get("value") == "true"
+                    elif ptag.get("name") == "wrap_y":
+                        tilemap.wrap_y = ptag.get("value") == "true"
 
         return tilemap
 
@@ -473,6 +479,13 @@ class IsometricMap():
         tilemap.height = jdict['height']
         tilemap.tile_width = jdict['tilewidth']
         tilemap.tile_height = jdict['tileheight']
+
+        if "properties" in jdict:
+            for tag in jdict["properties"]:
+                if tag["name"] == "wrap_x":
+                    tilemap.wrap_x = tag.get("value", False)
+                elif tag["name"] == "wrap_y":
+                    tilemap.wrap_y = tag.get("value", False)
 
         for tag in jdict['tilesets']:
             tilemap.tilesets.add(

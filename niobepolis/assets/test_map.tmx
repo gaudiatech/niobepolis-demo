@@ -3,6 +3,10 @@
  <editorsettings>
   <export target="test_map.json" format="json"/>
  </editorsettings>
+ <properties>
+  <property name="wrap_x" type="bool" value="true"/>
+  <property name="wrap_y" type="bool" value="false"/>
+ </properties>
  <tileset firstgid="1" source="sync-tileset.json"/>
  <tileset firstgid="10" source="sync-tileset.tsx"/>
  <layer id="4" name="Tile Layer 4" width="30" height="20" offsetx="0" offsety="15">

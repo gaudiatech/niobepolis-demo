@@ -106,6 +106,15 @@ class NPC(isometric_maps.IsometricMapObject):
         self.surf = pygame.image.load("assets/npc.png").convert_alpha()
         # self.surf.set_colorkey((0,0,255))
 
+    def bump(self):
+        # Call this method when the PC bumps into this NPC.
+        global conv_viewer, conversation_ongoing
+
+        conversation_ongoing = True
+        myconvo = dialogue.Offer.load_json("assets/conversation.json")
+        conv_viewer = dialogue.ConversationView(myconvo)
+        conv_viewer.turn_on()
+
     def __call__(self, dest_surface, sx, sy, mymap):
         mydest = self.surf.get_rect(midbottom=(sx, sy))
         dest_surface.blit(self.surf, mydest)
@@ -115,17 +124,17 @@ class NPC(isometric_maps.IsometricMapObject):
 # Define controllers etc
 # --------------------------------------------
 class BasicCtrl(kengi.event.EventReceiver):
-    def proc_event(self, gdi, source):
+    def proc_event(self, event, source):
         global conversation_ongoing, map_viewer, mypc, current_tilemap, current_path
 
-        if gdi.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONUP):
+        if event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONUP):
             if conversation_ongoing:
                 pass  # block all movement when the conversation is active
             else:
                 cursor = map_viewer.cursor
                 if cursor:
-                    cursor.update(map_viewer, gdi)
-                if gdi.type == pygame.MOUSEBUTTONUP and gdi.button == 1:
+                    cursor.update(map_viewer, event)
+                if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
                     #TODO: There are some glitches in the movement system, when the player character will not move to
                     # a tile that has been clicked. It generally happens with tiles that are adjacent to the PC's
                     # current position, but it doesn't happen all the time. I will look into this later.
@@ -133,29 +142,29 @@ class BasicCtrl(kengi.event.EventReceiver):
                     if DEBUG:
                         print('movement path has been set')
 
-        elif gdi.type == pygame.KEYDOWN:
-            if gdi.key == pygame.K_ESCAPE:
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
                 if conversation_ongoing:
                     # abort
                     self.pev(MyEvTypes.ConvEnds)
                 else:
                     self.pev(EngineEvTypes.GAMEENDS)
-            elif gdi.key == pygame.K_m:
+            elif event.key == pygame.K_m:
                 # mouse_x, mouse_y = pygame.mouse.get_pos()
                 # print(viewer.map_x(mouse_x, mouse_y, return_int=False),
                 #       viewer.map_y(mouse_x, mouse_y, return_int=False))
                 # print(viewer.relative_x(0, 0), viewer.relative_y(0, 0))
                 # print(viewer.relative_x(0, 19), viewer.relative_y(0, 19))
                 pass
-            elif gdi.key == pygame.K_d and mypc.x < tilemap_width - 1.5:
+            elif event.key == pygame.K_d and mypc.x < tilemap_width - 1.5:
                 mypc.x += 0.1
-            elif gdi.key == pygame.K_a and mypc.x > -1:
+            elif event.key == pygame.K_a and mypc.x > -1:
                 mypc.x -= 0.1
-            elif gdi.key == pygame.K_w and mypc.y > -1:
+            elif event.key == pygame.K_w and mypc.y > -1:
                 mypc.y -= 0.1
-            elif gdi.key == pygame.K_s and mypc.y < tilemap_height - 1.5:
+            elif event.key == pygame.K_s and mypc.y < tilemap_height - 1.5:
                 mypc.y += 0.1
-            elif gdi.key == pygame.K_TAB:
+            elif event.key == pygame.K_TAB:
                 current_tilemap = 1 - current_tilemap
                 map_viewer.switch_map(maps[current_tilemap])
 
@@ -172,10 +181,7 @@ class PathCtrl(kengi.event.EventReceiver):
                 ending_reached = current_path()
                 if ending_reached:
                     if current_path.goal:
-                        conversation_ongoing = True
-                        myconvo = dialogue.Offer.load_json("assets/conversation.json")
-                        conv_viewer = dialogue.ConversationView(myconvo)
-                        conv_viewer.turn_on()
+                        current_path.goal.bump()
                     current_path = None
 
         elif event.type == MyEvTypes.ConvEnds:
@@ -193,8 +199,8 @@ def _load_maps():
         isometric_maps.IsometricMap.load('assets/test_map2.tmx')
     )
     tilemap_width, tilemap_height = maps[0].width, maps[0].height
-    maps[0].wrap_x = True
-    maps[0].wrap_y = True
+    #maps[0].wrap_x = True
+    #maps[0].wrap_y = True
     #maps[1].wrap_x = True
     #maps[1].wrap_y = True
 
