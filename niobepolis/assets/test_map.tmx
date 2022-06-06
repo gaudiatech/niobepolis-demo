@@ -4,12 +4,12 @@
   <export target="test_map.json" format="json"/>
  </editorsettings>
  <properties>
-  <property name="wrap_x" type="bool" value="true"/>
-  <property name="wrap_y" type="bool" value="false"/>
+  <property name="wrap_x" type="bool" value="false"/>
+  <property name="wrap_y" type="bool" value="true"/>
  </properties>
  <tileset firstgid="1" source="sync-tileset.json"/>
  <tileset firstgid="10" source="sync-tileset.tsx"/>
- <layer id="4" name="Tile Layer 4" width="30" height="20" offsetx="0" offsety="15">
+ <layer id="4" name="Floor Layer" width="30" height="20" offsetx="0" offsety="15">
   <data encoding="base64" compression="zlib">
    eJxjY2BgYANiTiTMRkNML3tw2U1vO0fxKB7Fo3gUDzwmVO/Qql4iZOZA1YcDFQcDFe/0tBtmHwAG3Q5N
   </data>

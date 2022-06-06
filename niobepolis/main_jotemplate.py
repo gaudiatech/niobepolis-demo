@@ -30,6 +30,25 @@ screen = kengi.get_surface()  # retrieve the surface used for display
 tilemap_height = tilemap_width = 0
 
 
+# --------------------------------------------
+# Utility functions
+# --------------------------------------------
+
+def go_to_new_map(new_map, gate_name):
+    global current_tilemap, current_path
+    current_path = None
+    current_tilemap = new_map
+    new_gate = maps[current_tilemap].get_object_by_name(gate_name)
+    mypc.x = new_gate.x + 0.5
+    mypc.y = new_gate.y + 0.5
+
+    map_viewer.switch_map(maps[current_tilemap])
+
+
+# --------------------------------------------
+# Define classes
+# --------------------------------------------
+
 class Character(isometric_maps.IsometricMapObject):
     def __init__(self, x, y):
         super().__init__()
@@ -120,6 +139,29 @@ class NPC(isometric_maps.IsometricMapObject):
         dest_surface.blit(self.surf, mydest)
 
 
+class Portal(isometric_maps.IsometricMapObject):
+    def __init__(self, x, y, name, dest_map, dest_object_name):
+        super().__init__()
+        self.x = x
+        self.y = y
+        self.surf = pygame.image.load("assets/portalRings2.png").convert_alpha()
+        # self.surf.set_colorkey((0,0,255))
+        self.frame = 0
+        self.name = name
+        self.dest_map = dest_map
+        self.dest_object_name = dest_object_name
+
+    def bump(self):
+        # Call this method when the PC bumps into this portal.
+        go_to_new_map(self.dest_map, self.dest_object_name)
+
+    def __call__(self, dest_surface, sx, sy, mymap):
+        mydest = pygame.Rect(0,0,32,32)
+        mydest.midbottom = (sx, sy)
+        dest_surface.blit(self.surf, mydest, pygame.Rect(self.frame*32,0,32,32))
+        self.frame = (self.frame + 1) % 5
+
+
 # --------------------------------------------
 # Define controllers etc
 # --------------------------------------------
@@ -149,22 +191,7 @@ class BasicCtrl(kengi.event.EventReceiver):
                     self.pev(MyEvTypes.ConvEnds)
                 else:
                     self.pev(EngineEvTypes.GAMEENDS)
-            elif event.key == pygame.K_m:
-                # mouse_x, mouse_y = pygame.mouse.get_pos()
-                # print(viewer.map_x(mouse_x, mouse_y, return_int=False),
-                #       viewer.map_y(mouse_x, mouse_y, return_int=False))
-                # print(viewer.relative_x(0, 0), viewer.relative_y(0, 0))
-                # print(viewer.relative_x(0, 19), viewer.relative_y(0, 19))
-                pass
-            elif event.key == pygame.K_d and mypc.x < tilemap_width - 1.5:
-                mypc.x += 0.1
-            elif event.key == pygame.K_a and mypc.x > -1:
-                mypc.x -= 0.1
-            elif event.key == pygame.K_w and mypc.y > -1:
-                mypc.y -= 0.1
-            elif event.key == pygame.K_s and mypc.y < tilemap_height - 1.5:
-                mypc.y += 0.1
-            elif event.key == pygame.K_TAB:
+            elif event.key == pygame.K_TAB and current_tilemap in (0,1):
                 current_tilemap = 1 - current_tilemap
                 map_viewer.switch_map(maps[current_tilemap])
 
@@ -198,6 +225,9 @@ def _load_maps():
     maps.append(
         isometric_maps.IsometricMap.load('assets/test_map2.tmx')
     )
+    maps.append(
+        isometric_maps.IsometricMap.load('assets/small_map.tmx')
+    )
     tilemap_width, tilemap_height = maps[0].width, maps[0].height
     #maps[0].wrap_x = True
     #maps[0].wrap_y = True
@@ -209,12 +239,19 @@ def _add_map_entities(gviewer):
     global mypc, mynpc
     mypc = Character(10, 10)
     mynpc = NPC(15, 15)
-    tm, tm2 = maps[0], maps[1]
+    myportal = Portal(25,5, "To Small Room", 2, "To Main Map")
+    myportal2 = Portal(2,2, "To Main Map", 0, "To Small Room")
+    tm, tm2, tm3 = maps
     list(tm.objectgroups.values())[0].contents.append(mypc)
     list(tm2.objectgroups.values())[0].contents.append(mypc)
+    list(tm3.objectgroups.values())[0].contents.append(mypc)
 
     list(tm.objectgroups.values())[0].contents.append(mynpc)
     list(tm2.objectgroups.values())[0].contents.append(mynpc)
+
+    list(tm.objectgroups.values())[0].contents.append(myportal)
+    list(tm3.objectgroups.values())[0].contents.append(myportal2)
+    #list(tm2.objectgroups.values())[0].contents.append(myportal)
 
     gviewer.set_focused_object(mypc)
     # force: center on avatar op.

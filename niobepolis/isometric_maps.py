@@ -523,6 +523,13 @@ class IsometricMap():
             if l.name == layer_name:
                 return l
 
+    def get_object_by_name(self, object_name):
+        # Return the first object found with the provided name.
+        for obgroup in self.objectgroups.values():
+            for ob in obgroup.contents:
+                if ob.name == object_name:
+                    return ob
+
     def clamp_pos(self, pos):
         # For infinite scroll maps, clamp the x and/or y values
         nupos = list(pos)
