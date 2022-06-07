@@ -220,7 +220,7 @@ class PathCtrl(kengi.event.EventReceiver):
 def _load_maps():
     global maps, tilemap_width, tilemap_height
     maps.append(
-        isometric_maps.IsometricMap.load('assets/test_map.tmx')
+        isometric_maps.IsometricMap.load('assets/new_exterior.tmx')
     )
     maps.append(
         isometric_maps.IsometricMap.load('assets/test_map2.tmx')
@@ -239,7 +239,7 @@ def _add_map_entities(gviewer):
     global mypc, mynpc
     mypc = Character(10, 10)
     mynpc = NPC(15, 15)
-    myportal = Portal(25,5, "To Small Room", 2, "To Main Map")
+    myportal = Portal(10,25, "To Small Room", 2, "To Main Map")
     myportal2 = Portal(2,2, "To Main Map", 0, "To Small Room")
     tm, tm2, tm3 = maps
     list(tm.objectgroups.values())[0].contents.append(mypc)

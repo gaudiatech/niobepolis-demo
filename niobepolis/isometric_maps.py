@@ -414,13 +414,14 @@ class IsometricMap():
         self.tile_height = 0
         self.width = 0
         self.height = 0
-        self.properties = {}
         self.layers = list()
         self.tilesets = Tilesets()
         self.objectgroups = dict()
 
         self.wrap_x = False
         self.wrap_y = False
+
+        self.wallpaper = None
 
     @classmethod
     def load_tmx(cls, filename, object_fun=None):
@@ -461,6 +462,9 @@ class IsometricMap():
                         tilemap.wrap_x = ptag.get("value") == "true"
                     elif ptag.get("name") == "wrap_y":
                         tilemap.wrap_y = ptag.get("value") == "true"
+                    elif ptag.get("name") == "wallpaper":
+                        tilemap.wallpaper = pygame.image.load(os.path.join("assets",ptag.get("value")))
+
 
         return tilemap
 
@@ -486,6 +490,9 @@ class IsometricMap():
                     tilemap.wrap_x = tag.get("value", False)
                 elif tag["name"] == "wrap_y":
                     tilemap.wrap_y = tag.get("value", False)
+                elif tag["name"] == "wallpaper":
+                    tilemap.wallpaper = pygame.image.load(os.path.join("assets", tag.get("value")))
+
 
         for tag in jdict['tilesets']:
             tilemap.tilesets.add(
@@ -516,7 +523,8 @@ class IsometricMap():
         return (self.wrap_x or ((x >= 0) and (x < self.width))) and (self.wrap_y or ((y >= 0) and (y < self.height)))
 
     def get_layer_by_name(self, layer_name):
-        # The Layers type in Kengi supports indexing layers by name, but it doesn't support accessing layers by
+        # The Layers type in Kengi supports indexing layers by name, but it
+        # doesn't support accessing layers by
         # negative indices. I'm not sure that it supports slicing either. Anyhow, for now, only the map cursor needs
         # to look up layers by name so this function should be good enough for the time being.
         for l in self.layers:
