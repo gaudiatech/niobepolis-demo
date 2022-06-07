@@ -463,7 +463,7 @@ class IsometricMap():
                     elif ptag.get("name") == "wrap_y":
                         tilemap.wrap_y = ptag.get("value") == "true"
                     elif ptag.get("name") == "wallpaper":
-                        tilemap.wallpaper = pygame.image.load(os.path.join("assets",ptag.get("value")))
+                        tilemap.wallpaper = pygame.image.load(os.path.join("assets",ptag.get("value"))).convert_alpha()
 
 
         return tilemap
@@ -491,7 +491,7 @@ class IsometricMap():
                 elif tag["name"] == "wrap_y":
                     tilemap.wrap_y = tag.get("value", False)
                 elif tag["name"] == "wallpaper":
-                    tilemap.wallpaper = pygame.image.load(os.path.join("assets", tag.get("value")))
+                    tilemap.wallpaper = pygame.image.load(os.path.join("assets", tag.get("value"))).convert_alpha()
 
 
         for tag in jdict['tilesets']:
