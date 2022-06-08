@@ -206,6 +206,8 @@ class BasicCtrl(kengi.event.EventReceiver):
             elif event.key == pygame.K_TAB and current_tilemap in (0,1):
                 current_tilemap = 1 - current_tilemap
                 map_viewer.switch_map(maps[current_tilemap])
+                mypc.x = 10
+                mypc.y = 10
 
 
 class PathCtrl(kengi.event.EventReceiver):
@@ -235,7 +237,7 @@ def _load_maps():
         isometric_maps.IsometricMap.load('assets/new_exterior.tmx')
     )
     maps.append(
-        isometric_maps.IsometricMap.load('assets/test_map2.tmx')
+        isometric_maps.IsometricMap.load('assets/test_map0.tmx')
     )
     maps.append(
         isometric_maps.IsometricMap.load('assets/small_map.tmx')
