@@ -4,9 +4,9 @@ kengi.bootstrap_e()
 import demolib.animobs as animobs
 import demolib.dialogue as dialogue
 import demolib.pathfinding as pathfinding
-import isometric_maps
 from defs import MyEvTypes, MAXFPS, DEBUG
 
+isometric_maps = kengi.isometric.warehouse
 
 kengi.init('old_school', maxfps=MAXFPS)
 # IMPORTANT: polarbear component can crash the game if this line isnt added, after kengi.init
