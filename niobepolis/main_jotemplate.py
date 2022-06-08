@@ -6,6 +6,8 @@ import demolib.dialogue as dialogue
 import demolib.pathfinding as pathfinding
 from defs import MyEvTypes, MAXFPS, DEBUG
 
+import math
+
 isometric_maps = kengi.isometric.warehouse
 
 kengi.init('old_school', maxfps=MAXFPS)
@@ -91,13 +93,13 @@ class MovementPath:
 
     @staticmethod
     def pos_to_index(pos):
-        x = int(pos[0] + 0.99)
-        y = int(pos[1] + 0.99)
+        x = math.floor(pos[0])
+        y = math.floor(pos[1])
         return x, y
 
     @staticmethod
     def tile_is_blocked(mymap, x, y):
-        return not (mymap.on_the_map(x, y) and mymap.layers[1][x, y] == 0)
+        return not (mymap.on_the_map(x, y) and mymap.layers[1][math.floor(x), math.floor(y)] == 0)
 
     def __call__(self):
         # Called once per update; returns True when the action is completed.
@@ -114,10 +116,8 @@ class MovementPath:
                     nx, ny = self.path.results.pop(0)
 
                 # De-clamp the nugoal coordinates.
-                if self.mymap.wrap_x:
-                    nx = min([nx, nx-self.mymap.width, nx+self.mymap.width], key=lambda x: abs(x-self.mapob.x))
-                if self.mymap.wrap_y:
-                    ny = min([ny, ny-self.mymap.height, ny+self.mymap.height], key=lambda y: abs(y-self.mapob.y))
+                nx = min([nx, nx-self.mymap.width, nx+self.mymap.width], key=lambda x: abs(x-self.mapob.x))
+                ny = min([ny, ny-self.mymap.height, ny+self.mymap.height], key=lambda y: abs(y-self.mapob.y))
 
                 self.animob = animobs.MoveModel(
                     self.mapob, dest=(nx,ny), speed=0.25
@@ -208,6 +208,8 @@ class BasicCtrl(kengi.event.EventReceiver):
                 map_viewer.switch_map(maps[current_tilemap])
                 mypc.x = 10
                 mypc.y = 10
+            elif event.key == pygame.K_F1:
+                print(map_viewer.cursor.get_pos())
 
 
 class PathCtrl(kengi.event.EventReceiver):

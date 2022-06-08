@@ -8,7 +8,7 @@
  </layer>
  <layer id="2" name="Wall Layer" width="10" height="10">
   <data encoding="base64" compression="zlib">
-   eJxjYmBgYCISEwKj6vCrIwYDADpgAEk=
+   eJxjYIAAJhyYVECMHmLNHgrqSAWEwhkAJ3AAMQ==
   </data>
  </layer>
  <objectgroup id="3" name="Object Layer 1" offsetx="0" offsety="4"/>
