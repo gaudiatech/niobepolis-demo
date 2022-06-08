@@ -57,7 +57,7 @@ def get_fline(p1, p2, speed):
 
 
 class MoveModel(object):
-    def __init__(self, model, start=None, dest=(0, 0), speed=0.1, delay=0):
+    def __init__(self, model, dest, speed=0.1, delay=0):
         self.model = model
         self.speed = speed
         self.dest = dest
@@ -65,8 +65,7 @@ class MoveModel(object):
         self.step = 0
         self.needs_deletion = False
         self.children = list()
-        if not start:
-            start = model.pos
+        start = (model.x, model.y)
         self.itinerary = get_fline(start, dest, speed)
 
     def update(self):

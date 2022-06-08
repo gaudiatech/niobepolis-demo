@@ -67,6 +67,7 @@ class MovementPath:
         self.mapob = mapob
         self.dest = dest
         self.goal = None
+        self.mymap = mymap
         blocked_tiles = set()
         obgroup = list(mymap.objectgroups.values())[0]
         for ob in obgroup.contents:
@@ -75,8 +76,11 @@ class MovementPath:
                 if self.pos_to_index((ob.x, ob.y)) == self.pos_to_index(dest):
                     self.goal = ob
         self.path = pathfinding.AStarPath(
-            mymap, self.pos_to_index((mapob.x, mapob.y)), self.pos_to_index(dest), self.tile_is_blocked, blocked_tiles
+            mymap, self.pos_to_index((mapob.x, mapob.y)), self.pos_to_index(dest), self.tile_is_blocked,
+            mymap.clamp_pos_int, blocked_tiles=blocked_tiles, wrap_x=mymap.wrap_x, wrap_y=mymap.wrap_y
         )
+        if not self.path.results:
+            print("No path found!")
         if self.path.results:
             self.path.results.pop(0)
         self.all_the_way_to_dest = not (dest in blocked_tiles or self.tile_is_blocked(mymap, *self.pos_to_index(dest)))
@@ -107,8 +111,15 @@ class MovementPath:
                     self.path.results = []
                 else:
                     nugoal = self.path.results.pop(0)
+
+                # De-clamp the nugoal coordinates.
+                if self.mymap.wrap_x:
+                    nx = min([nugoal[0], nugoal[0]-self.mymap.map_width, nugoal[0]+self.mymap.map_width], key=lambda x: abs(x-self.mapob.x))
+                if self.mymap.wrap_y:
+                    ny = min([nugoal[1], nugoal[1]-self.mymap.map_height, nugoal[1]+self.mymap.map_height], key=lambda y: abs(y-self.mapob.y))
+
                 self.animob = animobs.MoveModel(
-                    self.mapob, start=(self.mapob.x, self.mapob.y), dest=nugoal, speed=0.25
+                    self.mapob, dest=(nx,ny), speed=0.25
                 )
             else:
                 # print((self.mapob.x,self.mapob.y))

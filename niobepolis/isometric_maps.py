@@ -547,7 +547,18 @@ class IsometricMap():
         if self.wrap_y:
             f, i = math.modf(pos[1])
             nupos[1] = int(i) % self.height + f
-        return nupos
+        return tuple(nupos)
+
+    def clamp_pos_int(self, pos):
+        # For infinite scroll maps, clamp the x and/or y values
+        nupos = list(pos)
+        if self.wrap_x:
+            f, i = math.modf(pos[0])
+            nupos[0] = int(i) % self.width
+        if self.wrap_y:
+            f, i = math.modf(pos[1])
+            nupos[1] = int(i) % self.height
+        return tuple(nupos)
 
 
 class IsometricMapQuarterCursor(object):
