@@ -107,16 +107,16 @@ class MovementPath:
         if not self.animob:
             if self.path.results:
                 if len(self.path.results) == 1 and self.all_the_way_to_dest:
-                    nugoal = self.dest
+                    nx, ny = self.dest
                     self.path.results = []
                 else:
-                    nugoal = self.path.results.pop(0)
+                    nx, ny = self.path.results.pop(0)
 
                 # De-clamp the nugoal coordinates.
                 if self.mymap.wrap_x:
-                    nx = min([nugoal[0], nugoal[0]-self.mymap.map_width, nugoal[0]+self.mymap.map_width], key=lambda x: abs(x-self.mapob.x))
+                    nx = min([nx, nx-self.mymap.width, nx+self.mymap.width], key=lambda x: abs(x-self.mapob.x))
                 if self.mymap.wrap_y:
-                    ny = min([nugoal[1], nugoal[1]-self.mymap.map_height, nugoal[1]+self.mymap.map_height], key=lambda y: abs(y-self.mapob.y))
+                    ny = min([ny, ny-self.mymap.height, ny+self.mymap.height], key=lambda y: abs(y-self.mapob.y))
 
                 self.animob = animobs.MoveModel(
                     self.mapob, dest=(nx,ny), speed=0.25
