@@ -357,7 +357,7 @@ class ExtraLayerView(ReceiverObj):
 
 def load_isometric_map(csv=False):
     # no compression used
-    kengi.isometric.IsometricLayer.flag_csv = csv  # notice the iso engine that our .json stores uncompressed data
+    kengi.isometric.model.IsometricLayer.flag_csv = csv  # notice the iso engine that our .json stores uncompressed data
 
     if not webctx():
         # classic way to load map --
@@ -368,7 +368,7 @@ def load_isometric_map(csv=False):
         # alternative way: from frozen json
         jdict = json.loads(get_frozen_json_txt())
 
-    return kengi.isometric.IsometricMap.from_json_dict(['niobepolis', 'assets', ], jdict)
+    return kengi.isometric.model.IsometricMap.from_json_dict(['niobepolis', 'assets', ], jdict)
 
 
 def init_tilemap_etc(screen):
@@ -385,7 +385,7 @@ def init_tilemap_etc(screen):
     # add the avatar to the map
     list(tilemap.objectgroups.values())[0].contents.append(avatar_m)
 
-    isomap_viewer = kengi.isometric.IsometricMapViewer(
+    isomap_viewer = kengi.isometric.IsometricMapViewer0(  # TODO unify
         tilemap, screen,
         up_scroll_key=pygame.K_UP,
         down_scroll_key=pygame.K_DOWN,
@@ -485,7 +485,7 @@ class ExtraGuiLayerCtrl(ReceiverObj):
             #    t_map_changed = tnow
 
 
-class Character(kengi.isometric.IsometricMapObject):
+class Character(kengi.isometric.model.IsometricMapObject):
     def __init__(self, x, y):
         super().__init__()
         self.x = x
