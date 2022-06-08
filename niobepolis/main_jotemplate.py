@@ -54,6 +54,7 @@ class Character(isometric_maps.IsometricMapObject):
         super().__init__()
         self.x = x
         self.y = y
+        self.name = "PC"
         self.surf = pygame.image.load("assets/sys_icon.png").convert_alpha()
         # self.surf.set_colorkey((0,0,255))
 

@@ -544,20 +544,28 @@ class IsometricMap():
         if self.wrap_x:
             f, i = math.modf(pos[0])
             nupos[0] = int(i) % self.width + f
+        else:
+            if pos[0] < 0:
+                pos[0] = 0
+            elif pos[0] >= self.width:
+                pos[0] = self.width-1
         if self.wrap_y:
             f, i = math.modf(pos[1])
             nupos[1] = int(i) % self.height + f
+        else:
+            if pos[1] < 0:
+                pos[1] = 0
+            elif pos[1] >= self.height:
+                pos[1] = self.height-1
         return tuple(nupos)
 
     def clamp_pos_int(self, pos):
         # For infinite scroll maps, clamp the x and/or y values
         nupos = list(pos)
-        if self.wrap_x:
-            f, i = math.modf(pos[0])
-            nupos[0] = int(i) % self.width
-        if self.wrap_y:
-            f, i = math.modf(pos[1])
-            nupos[1] = int(i) % self.height
+        f, i = math.modf(pos[0])
+        nupos[0] = int(i) % self.width
+        f, i = math.modf(pos[1])
+        nupos[1] = int(i) % self.height
         return tuple(nupos)
 
 
@@ -574,7 +582,7 @@ class IsometricMapQuarterCursor(object):
         if self.visible:
             sx, sy = view.screen_coords(*self.get_pos())
             mylayer = view.isometric_map.get_layer_by_name(self.layer_name)
-            mydest = self.surf.get_rect(midbottom=(sx + mylayer.offsetx, sy + mylayer.offsety - 2))
+            mydest = self.surf.get_rect(midtop=(sx + mylayer.offsetx, sy + mylayer.offsety - 1))
             view.screen.blit(self.surf, mydest)
 
     def set_position(self, view, x, y):
@@ -590,7 +598,7 @@ class IsometricMapQuarterCursor(object):
         return self._doubley // 2
 
     def get_pos(self):
-        return float(self._doublex - 1) / 2, float(self._doubley - 1) / 2
+        return float(self._doublex) / 2.0, float(self._doubley) / 2.0
 
     def focus(self, view):
         view.focus(float(self._doublex - 1) / 2.0, float(self._doubley - 1) / 2.0)
