@@ -8,7 +8,11 @@ from defs import MyEvTypes, MAXFPS, DEBUG
 
 import math
 
-isometric_maps = kengi.isometric.warehouse
+
+# aliases
+IsoMap = kengi.isometric.model.IsometricMap
+IsoCursor = kengi.isometric.extras.IsometricMapQuarterCursor
+IsoCursor.new_coord_system = True
 
 kengi.init('old_school', maxfps=MAXFPS)
 # IMPORTANT: polarbear component can crash the game if this line isnt added, after kengi.init
@@ -51,7 +55,7 @@ def go_to_new_map(new_map, gate_name):
 # Define classes
 # --------------------------------------------
 
-class Character(isometric_maps.IsometricMapObject):
+class Character(kengi.isometric.model.IsometricMapObject):
     def __init__(self, x, y):
         super().__init__()
         self.x = x
@@ -129,7 +133,7 @@ class MovementPath:
                 return True
 
 
-class NPC(isometric_maps.IsometricMapObject):
+class NPC(kengi.isometric.model.IsometricMapObject):
     def __init__(self, x, y):
         super().__init__()
         self.x = x
@@ -151,7 +155,7 @@ class NPC(isometric_maps.IsometricMapObject):
         dest_surface.blit(self.surf, mydest)
 
 
-class Portal(isometric_maps.IsometricMapObject):
+class Portal(kengi.isometric.model.IsometricMapObject):
     def __init__(self, x, y, name, dest_map, dest_object_name):
         super().__init__()
         self.x = x
@@ -236,13 +240,13 @@ class PathCtrl(kengi.event.EventReceiver):
 def _load_maps():
     global maps, tilemap_width, tilemap_height
     maps.append(
-        isometric_maps.IsometricMap.load('assets/new_exterior.tmx')
+        IsoMap.load(['assets', ], 'new_exterior.tmx')
     )
     maps.append(
-        isometric_maps.IsometricMap.load('assets/test_map0.tmx')
+        IsoMap.load(['assets', ], 'test_map0.tmx')
     )
     maps.append(
-        isometric_maps.IsometricMap.load('assets/small_map.tmx')
+        IsoMap.load(['assets', ], 'small_map.tmx')
     )
     tilemap_width, tilemap_height = maps[0].width, maps[0].height
     #maps[0].wrap_x = True
@@ -287,7 +291,7 @@ def _init_specific_stuff():
 
     cursor_image = pygame.image.load("assets/half-floor-tile.png").convert_alpha()
     cursor_image.set_colorkey((255, 0, 255))
-    map_viewer.cursor = isometric_maps.IsometricMapQuarterCursor(0, 0, cursor_image, maps[0].layers[1])
+    map_viewer.cursor = IsoCursor(0, 0, cursor_image, maps[0].layers[1])
     pctrl = PathCtrl()
 
     map_viewer.turn_on()
