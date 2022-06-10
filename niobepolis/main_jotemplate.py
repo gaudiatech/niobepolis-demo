@@ -12,7 +12,7 @@ import math
 # aliases
 IsoMap = kengi.isometric.model.IsometricMap
 IsoCursor = kengi.isometric.extras.IsometricMapQuarterCursor
-IsoCursor.new_coord_system = True
+IsoCursor.new_coord_system = False
 
 kengi.init('old_school', maxfps=MAXFPS)
 # IMPORTANT: polarbear component can crash the game if this line isnt added, after kengi.init
@@ -240,7 +240,7 @@ class PathCtrl(kengi.event.EventReceiver):
 def _load_maps():
     global maps, tilemap_width, tilemap_height
     maps.append(
-        IsoMap.load(['assets', ], 'new_exterior.tmx')
+        IsoMap.load(['assets', ], 'neo_exterior.tmx')
     )
     maps.append(
         IsoMap.load(['assets', ], 'test_map0.tmx')
@@ -282,7 +282,7 @@ def _init_specific_stuff():
     global map_viewer, maps
 
     _load_maps()
-    map_viewer = kengi.isometric.IsometricMapViewer(
+    map_viewer = kengi.isometric.IsometricMapViewer0(
         maps[0], screen,
         up_scroll_key=pygame.K_UP, down_scroll_key=pygame.K_DOWN,
         left_scroll_key=pygame.K_LEFT, right_scroll_key=pygame.K_RIGHT
