@@ -38,7 +38,7 @@
   </object>
   <object id="15" name="Zetus" type="NPC" gid="273" x="276.5" y="669.5" width="32" height="32">
    <properties>
-    <property name="conversation" value="convo_jt1.json"/>
+    <property name="conversation" value="convo_jt2.json"/>
     <property name="portrait" value="portrait_man.png"/>
    </properties>
   </object>

@@ -1,70 +1,62 @@
 {
-  "msg": "Greetings, stranger. You look like you have travelled a great distance to get here.",
+  "msg": "Welcome to Niobe Polis, pal. You look like you're new around these parts. Want me to give you the lowdown on living the high life?",
   "replies": [
     {
-      "msg": "Hold on there... this is a cyberpunk game, not a fantasy game. You should've called me \"chummer\" or something.",
+      "msg": "How do I know I can trust you?",
       "destination": {
-        "msg": "Fair enough. Yolo, chummer. I can see you've been hacking the intertubes for gigaparsecs.",
+        "msg": "Well that's easy enough. See this gun I'm holding? Top of the line, expensive as hell. I wouldn't be able to afford it if I were a newb like you. And if I wanted you gone, I'd have shot you already.",
         "replies": [
           {
-            "msg": "Much better, thank you. Now can you explain what all of this is about?",
+            "msg": "That... actually made sense.",
             "destination": {
-              "msg": "This is a tech demo using the Kengi engine."
+              "msg": "Of course it did; I'm a bona fide code warrior, not like most of these other blips. The city you're standing in now is the hub. Niobe Polis is the wire that holds all these other worlds together.",
+              "replies": [
+                {
+                  "msg": "What other worlds are you talking about?",
+                  "destination": {
+                    "msg": "Games, meeting places, realms... You can access the other worlds by stepping through a portal. Or you can learn to master the terminal and create your own worlds."
+                  }
+                },
+                {
+                  "msg": "How do I get to a different world?",
+                  "destination": {
+                    "msg": "The easiest way is just to step through a portal and see where it takes you. You could also use a terminal to log yourself into a game directly; it's not quite as obvious, but master the terminal and you will master Niobe Polis itself."
+                  }
+                }
+              ]
+
             }
           }
         ]
       }
-    },{
-      "msg": "Hi there. Who are you?",
+    },
+    {
+      "msg": "Just give me the short version.",
       "destination": {
-        "msg": "I am a mysterious stranger... I could be anyone, or anything, you want me to be. The only limit is your imagination.",
+        "msg": "Check out the city, and see what you can do here. Then try the portals and visit different games. Finally, open a terminal and see for yourself how Niobe Polis really works. That short enough for ya?"
+      }
+    },
+    {
+      "msg": "Alright, I could use some info.",
+      "destination": {
+        "msg": "This city, Niobe Polis, is what we call a liminal space. It's a nexus between worlds. It's also a hell of a fun place to hang out.",
         "replies": [
           {
-            "msg": "Sounds like you are the beginnings of a generic NPC class, designed to be flexible yet powerful.",
+            "msg": "Tell me about the portals.",
             "destination": {
-              "msg": "Actually I'm just a generic isometric map object right now. But yeah, that is pretty flexible and powerful.",
-              "replies": [
-                {
-                  "msg": "Just like a monomolecular sword!",
-                  "destination": {
-                    "msg": "That's the spirit. Keep that in mind until the inventory system and combat get worked out."
-                  }
-                },
-                {
-                  "msg": "Well, it was nice talking to you. I'll see you around.",
-                  "destination": {
-                    "msg": "Of course you will. I'm the only entity besides you on this map."
-                  }
+              "msg": "The portals lead to alternate realities... I believe you would call them 'games'. You can try out a few, then come back here to look for more."
                 }
-              ]
+          },
+          {
+            "msg": "What's up with all these computer terminals?",
+            "destination": {
+              "msg": "A digital city needs digital tools. The terminals area a different way to access the worlds. They allow you to log directly into a game, to view how a game is constructed, and even to copy and create your own games."
             }
           },
           {
-            "msg": "Can you be a dog?",
+            "msg": "How can I have a good time around here?",
             "destination": {
-              "msg": "I could be a dog, a character, a computer terminal. Anything you need for the game.",
-              "replies": [
-                {
-                  "msg": "Be a dog right now.",
-                  "destination": {
-                    "msg": "[You stand before a friendly-looking samoyed dog. For some reason it is wearing a wizard robe and had glowing eyes.]",
-                    "replies": [
-                      {
-                        "msg": "[Pet the dog]",
-                        "destination": {
-                          "msg": "Achievement unlocked: It is possible to pet the dog in the Kengi demo!"
-                        }
-                      }
-                    ]
-                  }
-                },
-                {
-                  "msg": "That sounds really useful.",
-                  "destination": {
-                    "msg": "Well, that's the point. This code is just a starting point; bricks from which games can be created."
-                  }
-                }
-              ]
+              "msg": "You'll probably want to check out the casino. Get a bit drunk, lose a bit of cash. Loads of fun."
             }
           }
         ]

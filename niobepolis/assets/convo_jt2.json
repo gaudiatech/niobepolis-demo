@@ -1,70 +1,43 @@
 {
-  "msg": "Greetings, stranger. You look like you have travelled a great distance to get here.",
+  "msg": "I can't believe it... I just lost everything I own in the casino.",
   "replies": [
     {
-      "msg": "Hold on there... this is a cyberpunk game, not a fantasy game. You should've called me \"chummer\" or something.",
+      "msg": "Oh no; you must be absolutely devastated.",
       "destination": {
-        "msg": "Fair enough. Yolo, chummer. I can see you've been hacking the intertubes for gigaparsecs.",
+        "msg": "Are you nuts? I REGRET NOTHING!!! I had a great time gambling; my only regret is that I didn't get drunk while I still had some cash!",
         "replies": [
           {
-            "msg": "Much better, thank you. Now can you explain what all of this is about?",
+            "msg": "You sound surprisingly upbeat about this.",
             "destination": {
-              "msg": "This is a tech demo using the Kengi engine."
+              "msg": "I'm here for a good time not for a long time, pal. If I can't make back my stash tonight I'll probably try my luck in one of the other worlds.",
+              "replies": [
+                {
+                  "msg": "\"Other Worlds\"?!",
+                  "destination": {
+                    "msg": "Each of these portals and terminals lead to different games. I suck as a gambler; maybe I'll try my luck as an asteroid miner."
+                  }
+                },
+                {
+                  "msg": "Well good luck to you.",
+                  "destination": {
+                    "msg": "Thanks, and to you too!"
+                  }
+                }
+              ]
             }
           }
         ]
       }
-    },{
-      "msg": "Hi there. Who are you?",
+    },
+    {
+      "msg": "What are you going to do now?",
       "destination": {
-        "msg": "I am a mysterious stranger... I could be anyone, or anything, you want me to be. The only limit is your imagination.",
+        "msg": "Keep having a good time, of course! Maybe I'll go to the bar and convince someone else to get me drunk. You should try that too; works more often than you'd expect.",
         "replies": [
           {
-            "msg": "Sounds like you are the beginnings of a generic NPC class, designed to be flexible yet powerful.",
+            "msg": "I think you've had enough fun for one night.",
             "destination": {
-              "msg": "Actually I'm just a generic isometric map object right now. But yeah, that is pretty flexible and powerful.",
-              "replies": [
-                {
-                  "msg": "Just like a monomolecular sword!",
-                  "destination": {
-                    "msg": "That's the spirit. Keep that in mind until the inventory system and combat get worked out."
-                  }
-                },
-                {
-                  "msg": "Well, it was nice talking to you. I'll see you around.",
-                  "destination": {
-                    "msg": "Of course you will. I'm the only entity besides you on this map."
-                  }
-                }
-              ]
-            }
-          },
-          {
-            "msg": "Can you be a dog?",
-            "destination": {
-              "msg": "I could be a dog, a character, a computer terminal. Anything you need for the game.",
-              "replies": [
-                {
-                  "msg": "Be a dog right now.",
-                  "destination": {
-                    "msg": "[You stand before a friendly-looking samoyed dog. For some reason it is wearing a wizard robe and had glowing eyes.]",
-                    "replies": [
-                      {
-                        "msg": "[Pet the dog]",
-                        "destination": {
-                          "msg": "Achievement unlocked: It is possible to pet the dog in the Kengi demo!"
-                        }
-                      }
-                    ]
-                  }
-                },
-                {
-                  "msg": "That sounds really useful.",
-                  "destination": {
-                    "msg": "Well, that's the point. This code is just a starting point; bricks from which games can be created."
-                  }
-                }
-              ]
+              "msg": "No such thing, chumbo. The fun never ends when you live in the amusement automata. Maybe I should go pick some fights with random strangers."
             }
           }
         ]
