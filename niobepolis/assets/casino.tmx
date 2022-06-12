@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.8" tiledversion="1.8.4" orientation="isometric" renderorder="right-down" width="20" height="15" tilewidth="64" tileheight="32" infinite="0" nextlayerid="11" nextobjectid="14">
+ <editorsettings>
+  <export format="json"/>
+ </editorsettings>
+ <properties>
+  <property name="wrap_x" type="bool" value="false"/>
+  <property name="wrap_y" type="bool" value="false"/>
+ </properties>
+ <tileset firstgid="1" source="sync-tileset.json"/>
+ <tileset firstgid="10" source="sync-tileset.tsx"/>
+ <tileset firstgid="19" source="wip-tileset.tsx"/>
+ <tileset firstgid="275" source="temp_entities.tsx"/>
+ <layer id="4" name="Floor Layer" width="20" height="15" offsetx="0" offsety="15">
+  <data encoding="base64" compression="zlib">
+   eJxjYWBgYAFiTiTMQgGmVP8oHsWjeBTjwgBmsQTF
+  </data>
+ </layer>
+ <layer id="1" name="Wall Layer" width="20" height="15">
+  <data encoding="base64" compression="zlib">
+   eJzLZ2BgyKcyphYYNW/UvFHzhr551MQAVCkcnw==
+  </data>
+ </layer>
+ <objectgroup id="5" name="Object Layer 1">
+  <object id="3" name="Casino Inside Door" type="Door" gid="275" x="608" y="256" width="64" height="64">
+   <properties>
+    <property name="dest_door" value="Casino Outside Door"/>
+    <property name="dest_map" value="0"/>
+   </properties>
+  </object>
+  <object id="4" gid="277" x="466.25" y="301.75" width="64" height="64"/>
+  <object id="5" gid="277" x="474" y="125" width="64" height="64"/>
+  <object id="6" gid="278" x="260.25" y="133.75" width="64" height="64"/>
+  <object id="7" gid="278" x="280.5" y="226.5" width="64" height="64"/>
+  <object id="8" gid="278" x="299.5" y="335.5" width="64" height="64"/>
+  <object id="9" gid="278" x="125.5" y="129.5" width="64" height="64"/>
+  <object id="10" gid="278" x="149" y="226" width="64" height="64"/>
+  <object id="11" gid="278" x="173.5" y="338.5" width="64" height="64"/>
+  <object id="12" name="Terminal 3" type="Terminal" gid="279" x="336" y="70" width="64" height="64"/>
+  <object id="13" type="GlowingPortal" gid="280" x="98.5" y="383.5" width="64" height="64"/>
+ </objectgroup>
+</map>

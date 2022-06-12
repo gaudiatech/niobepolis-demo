@@ -3,6 +3,8 @@ import defs
 import katagames_engine as kengi
 from . import rpgmenu
 
+import os
+
 
 # - aliases
 frects = kengi.polarbear.frects
@@ -72,13 +74,16 @@ class ConversationView(EventReceiver):
     MENU_AREA = frects.Frect(-75, 30, 300, 80)
     PORTRAIT_AREA = frects.Frect(-240, -110, 150, 225)
 
-    def __init__(self, root_offer, pre_render=None):
+    def __init__(self, root_offer, portrait=None, pre_render=None):
         super().__init__()
         self.text = ''
         self.root_offer = root_offer
         self.pre_render = pre_render
         self.font = pygame.font.Font("assets/DejaVuSansCondensed-Bold.ttf", 13)
-        self.portrait = pygame.image.load("assets/mysterious_stranger.png").convert_alpha()
+        if portrait:
+            self.portrait = pygame.image.load(os.path.join("assets", portrait)).convert_alpha()
+        else:
+            self.portrait = None
 
         self.curr_offer = root_offer
         self.dialog_upto_date = False
@@ -142,4 +147,6 @@ class ConversationView(EventReceiver):
         default_border.render(text_rect)
         draw_text(self.font, self.text, text_rect)
         default_border.render(self.MENU_AREA.get_rect())
-        self.screen.blit(self.portrait, self.PORTRAIT_AREA.get_rect())
+        if self.portrait:
+            self.screen.blit(self.portrait, self.PORTRAIT_AREA.get_rect())
+

@@ -7,6 +7,7 @@ import demolib.pathfinding as pathfinding
 from defs import MyEvTypes, MAXFPS, DEBUG
 
 import math
+import os
 
 
 # aliases
@@ -30,7 +31,7 @@ current_path = None
 current_tilemap = 0
 maps = list()
 map_viewer = None
-mypc = mynpc = None
+mypc = None
 path_ctrl = None
 screen = kengi.get_surface()  # retrieve the surface used for display
 tilemap_height = tilemap_width = 0
@@ -63,6 +64,7 @@ class Character(kengi.isometric.model.IsometricMapObject):
         self.name = "PC"
         self.surf = pygame.image.load("assets/sys_icon.png").convert_alpha()
         # self.surf.set_colorkey((0,0,255))
+
 
     def __call__(self, dest_surface, sx, sy, mymap):
         mydest = self.surf.get_rect(midbottom=(sx, sy))
@@ -103,7 +105,7 @@ class MovementPath:
 
     @staticmethod
     def tile_is_blocked(mymap, x, y):
-        return not (mymap.on_the_map(x, y) and mymap.layers[1][math.floor(x), math.floor(y)] == 0)
+        return mymap.tile_is_blocked(x, y)
 
     def __call__(self):
         # Called once per update; returns True when the action is completed.
@@ -134,42 +136,31 @@ class MovementPath:
 
 
 class NPC(kengi.isometric.model.IsometricMapObject):
-    def __init__(self, x, y):
-        super().__init__()
-        self.x = x
-        self.y = y
-        self.surf = pygame.image.load("assets/npc.png").convert_alpha()
-        # self.surf.set_colorkey((0,0,255))
-
     def bump(self):
         # Call this method when the PC bumps into this NPC.
         global conv_viewer, conversation_ongoing
 
-        conversation_ongoing = True
-        myconvo = dialogue.Offer.load_json("assets/conversation.json")
-        conv_viewer = dialogue.ConversationView(myconvo)
-        conv_viewer.turn_on()
-
-    def __call__(self, dest_surface, sx, sy, mymap):
-        mydest = self.surf.get_rect(midbottom=(sx, sy))
-        dest_surface.blit(self.surf, mydest)
+        if "conversation" in self.properties:
+            conversation_ongoing = True
+            myconvo = dialogue.Offer.load_json(os.path.join("assets", self.properties["conversation"]))
+            conv_viewer = dialogue.ConversationView(myconvo, self.properties.get("portrait"))
+            conv_viewer.turn_on()
 
 
-class Portal(kengi.isometric.model.IsometricMapObject):
-    def __init__(self, x, y, name, dest_map, dest_object_name):
-        super().__init__()
-        self.x = x
-        self.y = y
-        self.surf = pygame.image.load("assets/portalRings2.png").convert_alpha()
-        # self.surf.set_colorkey((0,0,255))
-        self.frame = 0
-        self.name = name
-        self.dest_map = dest_map
-        self.dest_object_name = dest_object_name
-
+class Door(kengi.isometric.model.IsometricMapObject):
     def bump(self):
         # Call this method when the PC bumps into this portal.
-        go_to_new_map(self.dest_map, self.dest_object_name)
+        if "dest_map" in self.properties:
+            dest_map = int(self.properties.get("dest_map", 0))
+            dest_door = self.properties.get("dest_door")
+            go_to_new_map(dest_map, dest_door)
+
+
+class GlowingPortal(Door):
+    def __init__(self, *kwargs):
+        super().__init__(*kwargs)
+        self.surf = pygame.image.load("assets/portalRings2.png").convert_alpha()
+        self.frame = 0
 
     def __call__(self, dest_surface, sx, sy, mymap):
         mydest = pygame.Rect(0,0,32,32)
@@ -177,6 +168,19 @@ class Portal(kengi.isometric.model.IsometricMapObject):
         dest_surface.blit(self.surf, mydest, pygame.Rect(self.frame*32,0,32,32))
         self.frame = (self.frame + 1) % 5
 
+
+class Terminal(kengi.isometric.model.IsometricMapObject):
+    def bump(self):
+        # Call this method when the PC bumps into this terminal.
+        pass
+
+
+OBJECT_CLASSES = {
+    "Door": Door,
+    "NPC": NPC,
+    "GlowingPortal": GlowingPortal,
+    "Terminal": Terminal
+}
 
 # --------------------------------------------
 # Define controllers etc
@@ -227,7 +231,7 @@ class PathCtrl(kengi.event.EventReceiver):
             if current_path is not None:
                 ending_reached = current_path()
                 if ending_reached:
-                    if current_path.goal:
+                    if current_path.goal and hasattr(current_path.goal, "bump"):
                         current_path.goal.bump()
                     current_path = None
 
@@ -240,13 +244,16 @@ class PathCtrl(kengi.event.EventReceiver):
 def _load_maps():
     global maps, tilemap_width, tilemap_height
     maps.append(
-        IsoMap.load(['assets', ], 'neo_exterior.tmx')
+        IsoMap.load(['assets', ], 'neo_exterior.tmx', OBJECT_CLASSES)
     )
     maps.append(
-        IsoMap.load(['assets', ], 'test_map0.tmx')
+        IsoMap.load(['assets', ], 'test_map0.tmx', OBJECT_CLASSES)
     )
     maps.append(
-        IsoMap.load(['assets', ], 'small_map.tmx')
+        IsoMap.load(['assets', ], 'small_map.tmx', OBJECT_CLASSES)
+    )
+    maps.append(
+        IsoMap.load(['assets', ], 'casino.tmx', OBJECT_CLASSES)
     )
     tilemap_width, tilemap_height = maps[0].width, maps[0].height
     #maps[0].wrap_x = True
@@ -256,22 +263,10 @@ def _load_maps():
 
 
 def _add_map_entities(gviewer):
-    global mypc, mynpc
+    global mypc
     mypc = Character(10, 10)
-    mynpc = NPC(15, 15)
-    myportal = Portal(10,25, "To Small Room", 2, "To Main Map")
-    myportal2 = Portal(2,2, "To Main Map", 0, "To Small Room")
-    tm, tm2, tm3 = maps
-    list(tm.objectgroups.values())[0].contents.append(mypc)
-    list(tm2.objectgroups.values())[0].contents.append(mypc)
-    list(tm3.objectgroups.values())[0].contents.append(mypc)
-
-    list(tm.objectgroups.values())[0].contents.append(mynpc)
-    list(tm2.objectgroups.values())[0].contents.append(mynpc)
-
-    list(tm.objectgroups.values())[0].contents.append(myportal)
-    list(tm3.objectgroups.values())[0].contents.append(myportal2)
-    #list(tm2.objectgroups.values())[0].contents.append(myportal)
+    for tm in maps:
+        list(tm.objectgroups.values())[0].contents.append(mypc)
 
     gviewer.set_focused_object(mypc)
     # force: center on avatar op.
