@@ -52,11 +52,11 @@ class NPC(kengi.isometric.model.IsometricMapObject):
     def bump(self):
         # Call this method when the PC bumps into this NPC.
         if "conversation" in self.properties:
-            conversation_ongoing = True
-            myconvo = dialogue.Offer.load_json(os.path.join("assets", self.properties["conversation"]))
-            evmodule.EventManager.instance().post(
-                CgmEvent(MyEvTypes.ConvStarts, convo_obj=myconvo, portrait=self.properties.get("portrait"))
-            )
+            with open(os.path.join("assets", self.properties["conversation"]), 'r') as fconv:
+                myconvo = dialogue.Offer.load_jsondata(fconv.read())
+                evmodule.EventManager.instance().post(
+                    CgmEvent(MyEvTypes.ConvStarts, convo_obj=myconvo, portrait=self.properties.get("portrait"))
+                )
 
 
 class Terminal(kengi.isometric.model.IsometricMapObject):

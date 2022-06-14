@@ -9,17 +9,11 @@ from defs import MyEvTypes, MAXFPS, DEBUG
 import demolib.dialogue as dialogue
 
 
-# aliases
+# - aliases
 IsoMap = kengi.isometric.model.IsometricMap
 IsoCursor = kengi.isometric.extras.IsometricMapQuarterCursor
 IsoCursor.new_coord_system = False
-
-kengi.init('old_school', maxfps=MAXFPS)
-# IMPORTANT: polarbear component can crash the game if this line isnt added, after kengi.init
-kengi.polarbear.my_state.screen = kengi.get_surface()
-
-# - aliases
-pygame = kengi.pygame  # alias to keep on using pygame, easily
+pygame = kengi.pygame
 CgmEvent = kengi.event.CgmEvent
 EngineEvTypes = kengi.event.EngineEvTypes
 
@@ -32,7 +26,7 @@ maps = list()
 map_viewer = None
 mypc = None
 path_ctrl = None
-screen = kengi.get_surface()  # retrieve the surface used for display
+screen = None
 tilemap_height = tilemap_width = 0
 
 
@@ -189,19 +183,8 @@ def _load_maps():
     tilemap_width, tilemap_height = maps[0].width, maps[0].height
 
 
-def _add_map_entities(gviewer):
-    global mypc
-    mypc = entities.Character(10, 10)
-    for tm in maps:
-        list(tm.objectgroups.values())[0].contents.append(mypc)
-
-    gviewer.set_focused_object(mypc)
-    # force: center on avatar op.
-    mypc.x += 0.5
-
-
 def _init_specific_stuff():
-    global map_viewer, maps
+    global map_viewer, maps, mypc
 
     _load_maps()
     map_viewer = kengi.isometric.IsometricMapViewer0(
@@ -209,29 +192,36 @@ def _init_specific_stuff():
         up_scroll_key=pygame.K_UP, down_scroll_key=pygame.K_DOWN,
         left_scroll_key=pygame.K_LEFT, right_scroll_key=pygame.K_RIGHT
     )
-    _add_map_entities(map_viewer)
+    # - add map entities
+    mypc = entities.Character(10, 10)
+    for tm in maps:
+        list(tm.objectgroups.values())[0].contents.append(mypc)
 
+    map_viewer.set_focused_object(mypc)
+    # force: center on avatar op.
+    mypc.x += 0.5
+
+    # the rest
     cursor_image = pygame.image.load("assets/half-floor-tile.png").convert_alpha()
     cursor_image.set_colorkey((255, 0, 255))
     map_viewer.cursor = IsoCursor(0, 0, cursor_image, maps[0].layers[1])
-    pctrl = PathCtrl()
 
+    # activate all receivers
+    PathCtrl().turn_on()
     map_viewer.turn_on()
-    pctrl.turn_on()
-
-    bctrl = BasicCtrl()
-    bctrl.turn_on()
-
-
-def run_game():
-    _init_specific_stuff()
-    gctrl = kengi.get_game_ctrl()
-
-    gctrl.turn_on()
-    gctrl.loop()
-    kengi.quit()
-    print('bye!')
+    BasicCtrl().turn_on()
 
 
 if __name__ == '__main__':
-    run_game()
+    kengi.init('old_school', maxfps=MAXFPS)
+    screen = kengi.get_surface()
+
+    # TODO remove dependency in demolib/dialogue.py -> polarbear
+    # so we dont need this deprecated sm anymore
+    # In the meantime this line is mandatory
+    kengi.polarbear.my_state.screen = screen
+
+    _init_specific_stuff()
+    kengi.get_game_ctrl().turn_on().loop()
+    kengi.quit()
+    print('bye!')

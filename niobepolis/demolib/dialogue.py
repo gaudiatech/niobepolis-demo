@@ -40,10 +40,8 @@ class Offer(object):
         return cls(msg, effect, replies)
 
     @classmethod
-    def load_json(cls, filename):
-        with open(filename) as f:
-            jdict = json.load(f)
-        return cls.from_json(jdict)
+    def load_jsondata(cls, jsondata):
+        return cls.from_json(json.loads(jsondata))
 
 
 class Reply(object):
