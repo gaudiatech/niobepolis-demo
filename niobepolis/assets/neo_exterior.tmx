@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.8" tiledversion="1.8.4" orientation="isometric" renderorder="right-down" width="20" height="40" tilewidth="64" tileheight="32" infinite="0" nextlayerid="6" nextobjectid="26">
+<map version="1.8" tiledversion="1.8.2" orientation="isometric" renderorder="right-down" width="20" height="40" tilewidth="64" tileheight="32" infinite="0" nextlayerid="7" nextobjectid="26">
  <properties>
   <property name="wallpaper" value="wp_city.png"/>
   <property name="wrap_x" type="bool" value="false"/>
@@ -11,6 +11,11 @@
  <layer id="1" name="Floor Layer" width="20" height="40" offsetx="0" offsety="15">
   <data encoding="base64" compression="zlib">
    eJzN1E0KgCAQBWCPVNSpWwbuuogXaZ0LhUFMR95z6oEIll/+pM7VczTKaKysr8fW8pCwvZop2xne39bRYl/QWO5Jy3x7x9pj9JvpaeY7w+u198L2tN9hn7dRb+l45TN0fKhXMzVzP2MJsfhUB4WniU919jbAkl7uw/JWknelehdtjH/6JntlLM4dYiJ34ajHGh+S2WvHtKy9B9Qow7s=
+  </data>
+ </layer>
+ <layer id="6" name="travers_map" width="20" height="40" visible="0" opacity="0.4" offsetx="0" offsety="15">
+  <data encoding="base64" compression="zlib">
+   eJxjYBgFN6F4sJo3CkbBKECAmwzUzWOD3bxRMApoBWhR91ETDHbzKAWDzT3EgqHq7lEwuAAAYh8Q9Q==
   </data>
  </layer>
  <layer id="2" name="Wall Layer" width="20" height="40">
