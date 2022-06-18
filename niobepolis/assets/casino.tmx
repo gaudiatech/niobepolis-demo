@@ -30,12 +30,12 @@
   </object>
   <object id="4" gid="277" x="466.25" y="301.75" width="64" height="64"/>
   <object id="5" gid="277" x="474" y="125" width="64" height="64"/>
-  <object id="6" gid="278" x="260.25" y="133.75" width="64" height="64"/>
-  <object id="7" gid="278" x="280.5" y="226.5" width="64" height="64"/>
-  <object id="8" gid="278" x="299.5" y="335.5" width="64" height="64"/>
-  <object id="9" gid="278" x="125.5" y="129.5" width="64" height="64"/>
-  <object id="10" gid="278" x="149" y="226" width="64" height="64"/>
-  <object id="11" gid="278" x="173.5" y="338.5" width="64" height="64"/>
+  <object id="6" name="Slots6" type="SlotMachine" gid="278" x="260.25" y="133.75" width="64" height="64"/>
+  <object id="7" name="Slots5" type="SlotMachine" gid="278" x="280.5" y="226.5" width="64" height="64"/>
+  <object id="8" name="Slots4" type="SlotMachine" gid="278" x="299.5" y="335.5" width="64" height="64"/>
+  <object id="9" name="Slots3" type="SlotMachine" gid="278" x="125.5" y="129.5" width="64" height="64"/>
+  <object id="10" name="Slots2" type="SlotMachine" gid="278" x="149" y="226" width="64" height="64"/>
+  <object id="11" name="Slots1" type="SlotMachine" gid="278" x="173.5" y="338.5" width="64" height="64"/>
   <object id="12" name="Terminal 3" type="Terminal" gid="279" x="336" y="70" width="64" height="64"/>
   <object id="13" type="GlowingPortal" gid="280" x="98.5" y="383.5" width="64" height="64"/>
  </objectgroup>

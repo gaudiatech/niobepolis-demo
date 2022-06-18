@@ -12,4 +12,6 @@ MyEvTypes = kengi.event.enum_ev_types(
 
     'ConvChoice',  # contains value
     'ConvEnds',
+    'TerminalStarts',
+    'SlotMachineStarts'
 )

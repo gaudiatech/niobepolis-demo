@@ -10,6 +10,9 @@ evmodule = kengi.event
 CgmEvent = kengi.event.CgmEvent
 
 
+class ConversationEvent(CgmEvent):
+    pass
+
 class Character(kengi.isometric.model.IsometricMapObject):
     def __init__(self, x, y):
         super().__init__()
@@ -62,12 +65,23 @@ class NPC(kengi.isometric.model.IsometricMapObject):
 class Terminal(kengi.isometric.model.IsometricMapObject):
     def bump(self):
         # Call this method when the PC bumps into this terminal.
-        pass
+        evmodule.EventManager.instance().post(
+            CgmEvent(MyEvTypes.TerminalStarts)
+        )
+
+
+class SlotMachine(kengi.isometric.model.IsometricMapObject):
+    def bump(self):
+        # Call this method when the PC bumps into this terminal.
+        evmodule.EventManager.instance().post(
+            CgmEvent(MyEvTypes.SlotMachineStarts)
+        )
 
 
 OBJECT_CLASSES = {
     "Door": Door,
     "NPC": NPC,
     "GlowingPortal": GlowingPortal,
-    "Terminal": Terminal
+    "Terminal": Terminal,
+    "SlotMachine": SlotMachine
 }
