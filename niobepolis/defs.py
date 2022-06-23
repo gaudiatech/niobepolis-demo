@@ -12,6 +12,10 @@ MyEvTypes = kengi.event.enum_ev_types(
 
     'ConvChoice',  # contains value
     'ConvEnds',
+
+    # in Niobe Polis a portal can teleport you(tp) to another world
+    'PortalActivates',  # contains portal_id
+
     'TerminalStarts',
     'SlotMachineStarts'
 )

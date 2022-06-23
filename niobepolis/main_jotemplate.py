@@ -166,6 +166,23 @@ class PathCtrl(kengi.event.EventReceiver):
                 conv_viewer.turn_off()
 
 
+# ------------------------------------
+#  Temporary class: DEBUG tool
+#  we use this class only to ensure that game entities fire up events
+# ------------------------------------
+class GameEventLogger(kengi.event.EventReceiver):
+    def __init__(self):
+        super().__init__()
+
+    def proc_event(self, ev, source):
+        if ev.type == MyEvTypes.TerminalStarts:
+            print('Terminal ---------')
+        elif ev.type == MyEvTypes.SlotMachineStarts:
+            print('Slot machine------------')
+        elif ev.type == MyEvTypes.PortalActivates:
+            print('portal has been activated! portal_id= ', ev.portal_id)
+
+
 def _load_maps():
     global maps, tilemap_width, tilemap_height
     maps.append(
@@ -206,6 +223,7 @@ def _init_specific_stuff():
     cursor_image.set_colorkey((255, 0, 255))
     map_viewer.cursor = IsoCursor(0, 0, cursor_image, maps[0].layers[1])
 
+    GameEventLogger().turn_on()
     # activate all receivers
     PathCtrl().turn_on()
     map_viewer.turn_on()

@@ -4,14 +4,10 @@ import demolib.dialogue as dialogue
 import katagames_engine as kengi
 from defs import MyEvTypes
 
-
 pygame = kengi.pygame
 evmodule = kengi.event
 CgmEvent = kengi.event.CgmEvent
 
-
-class ConversationEvent(CgmEvent):
-    pass
 
 class Character(kengi.isometric.model.IsometricMapObject):
     def __init__(self, x, y):
@@ -32,7 +28,7 @@ class Door(kengi.isometric.model.IsometricMapObject):
         if "dest_map" in self.properties:
             dest_map = int(self.properties.get("dest_map", 0))
             dest_door = self.properties.get("dest_door")
-            # lets use the event manager, so we achive low-coupling
+            # let us use the event manager, so we achieve low-coupling
             evmodule.EventManager.instance().post(
                 CgmEvent(MyEvTypes.MapChanges, new_map=dest_map, gate_name=dest_door)
             )
@@ -41,14 +37,24 @@ class Door(kengi.isometric.model.IsometricMapObject):
 class GlowingPortal(Door):
     def __init__(self, *kwargs):
         super().__init__(*kwargs)
+
+        # TODO how can we store the portal id in the .tmx file?
+        self.ident = 999  # this shouldnt be hard set
+
         self.surf = pygame.image.load("assets/portalRings2.png").convert_alpha()
         self.frame = 0
 
     def __call__(self, dest_surface, sx, sy, mymap):
-        mydest = pygame.Rect(0,0,32,32)
+        mydest = pygame.Rect(0, 0, 32, 32)
         mydest.midbottom = (sx, sy)
-        dest_surface.blit(self.surf, mydest, pygame.Rect(self.frame*32,0,32,32))
+        dest_surface.blit(self.surf, mydest, pygame.Rect(self.frame * 32, 0, 32, 32))
         self.frame = (self.frame + 1) % 5
+
+    def bump(self):
+        # let us use the event manager, so we achieve low-coupling
+        evmodule.EventManager.instance().post(
+            CgmEvent(MyEvTypes.PortalActivates, portal_id=self.ident)
+        )
 
 
 class NPC(kengi.isometric.model.IsometricMapObject):
