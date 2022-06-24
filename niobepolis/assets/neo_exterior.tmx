@@ -49,12 +49,36 @@
   </object>
   <object id="17" name="Terminal 1" type="Terminal" gid="261" x="279.5" y="884.5" width="64" height="64"/>
   <object id="18" name="Terminal 2" type="Terminal" gid="261" x="535.5" y="492.5" width="64" height="64"/>
-  <object id="19" name="Portal1" type="GlowingPortal" gid="262" x="224.5" y="65.5" width="64" height="64"/>
-  <object id="21" name="Portal 2" type="GlowingPortal" gid="262" x="432.5" y="531.5" width="64" height="64"/>
-  <object id="22" name="Portal3" type="GlowingPortal" gid="262" x="81" y="619" width="64" height="64"/>
-  <object id="23" name="Portal4" type="GlowingPortal" gid="262" x="394.5" y="949.5" width="64" height="64"/>
-  <object id="24" name="Portal5" type="GlowingPortal" gid="262" x="450.5" y="1095.5" width="64" height="64"/>
-  <object id="25" name="Portal6" type="GlowingPortal" gid="262" x="299.5" y="1216.5" width="64" height="64"/>
+  <object id="19" name="Portal1" type="GlowingPortal" gid="262" x="224.5" y="65.5" width="64" height="64">
+   <properties>
+    <property name="ident" value=""/>
+   </properties>
+  </object>
+  <object id="21" name="Portal 2" type="GlowingPortal" gid="262" x="432.5" y="531.5" width="64" height="64">
+   <properties>
+    <property name="ident" value=""/>
+   </properties>
+  </object>
+  <object id="22" name="Portal3" type="GlowingPortal" gid="262" x="81" y="619" width="64" height="64">
+   <properties>
+    <property name="ident" value=""/>
+   </properties>
+  </object>
+  <object id="23" name="Portal4" type="GlowingPortal" gid="262" x="394.5" y="949.5" width="64" height="64">
+   <properties>
+    <property name="ident" value=""/>
+   </properties>
+  </object>
+  <object id="24" name="Portal5" type="GlowingPortal" gid="262" x="450.5" y="1095.5" width="64" height="64">
+   <properties>
+    <property name="ident" value=""/>
+   </properties>
+  </object>
+  <object id="25" name="Portal6" type="GlowingPortal" gid="262" x="299.5" y="1216.5" width="64" height="64">
+   <properties>
+    <property name="ident" value=""/>
+   </properties>
+  </object>
  </objectgroup>
  <layer id="5" name="Tile Layer 3" width="20" height="40" offsetx="0" offsety="-15">
   <data encoding="base64" compression="zlib">

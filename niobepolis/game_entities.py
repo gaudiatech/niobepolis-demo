@@ -38,11 +38,16 @@ class GlowingPortal(Door):
     def __init__(self, *kwargs):
         super().__init__(*kwargs)
 
-        # TODO how can we store the portal id in the .tmx file?
-        self.ident = 999  # this shouldnt be hard set
-
         self.surf = pygame.image.load("assets/portalRings2.png").convert_alpha()
         self.frame = 0
+
+    def _get_ident(self):
+        return self.properties.get("ident")
+
+    def _set_ident(self, new_value):
+        self.properties["ident"] = new_value
+
+    ident = property(_get_ident, _set_ident)
 
     def __call__(self, dest_surface, sx, sy, mymap):
         mydest = pygame.Rect(0, 0, 32, 32)

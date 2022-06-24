@@ -37,6 +37,10 @@
   <object id="10" name="Slots2" type="SlotMachine" gid="278" x="149" y="226" width="64" height="64"/>
   <object id="11" name="Slots1" type="SlotMachine" gid="278" x="173.5" y="338.5" width="64" height="64"/>
   <object id="12" name="Terminal 3" type="Terminal" gid="279" x="336" y="70" width="64" height="64"/>
-  <object id="13" type="GlowingPortal" gid="280" x="98.5" y="383.5" width="64" height="64"/>
+  <object id="13" name="Glowing Portal C" type="GlowingPortal" gid="280" x="98.5" y="383.5" width="64" height="64">
+   <properties>
+    <property name="ident" value=""/>
+   </properties>
+  </object>
  </objectgroup>
 </map>
