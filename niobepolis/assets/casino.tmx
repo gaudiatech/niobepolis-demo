@@ -21,7 +21,7 @@
    eJzLZ2BgyKcyphYYNW/UvFHzhr551MQAVCkcnw==
   </data>
  </layer>
- <objectgroup id="5" name="Object Layer 1">
+ <objectgroup id="5" name="Object Layer 1" offsetx="0" offsety="4">
   <object id="3" name="Casino Inside Door" type="Door" gid="275" x="608" y="256" width="64" height="64">
    <properties>
     <property name="dest_door" value="Casino Outside Door"/>

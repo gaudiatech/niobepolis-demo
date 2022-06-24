@@ -377,7 +377,7 @@ def init_tilemap_etc(screen):
 
     tilemap = load_isometric_map(csv=True)
 
-    avatar_m = Character(10.5, 10.5)
+    avatar_m = Character(12.5, 11.5)
     # better display, cosmetic change here
     avatar_m.ox = 0
     avatar_m.oy = -8
@@ -403,7 +403,7 @@ def init_tilemap_etc(screen):
 
     # camera focus avatar
     isomap_viewer.set_focused_object(avatar_m)
-    avatar_m.x += 1  # center the camera, now
+    #avatar_m.x += 1  # center the camera, now
 
     # chunk taken from PBGE, also it sets key repeat freq.
     # - disabled bc of web ctx BUGS! event manager cannot set repeating event, yet
@@ -536,11 +536,11 @@ class WorldCtrl(ReceiverObj):
         elif ev.type == pygame.KEYDOWN:
             delta_pos_coord = 0.5
             # -- avatar movement via arrow keys
-            if ev.key == pygame.K_RIGHT and avatar_m.x < tilemap.width - 2.2:
+            if ev.key == pygame.K_RIGHT and (avatar_m.x + delta_pos_coord) < tilemap.width:
                 avatar_m.x += delta_pos_coord
-            elif ev.key == pygame.K_UP and avatar_m.y > -0.5:
+            elif ev.key == pygame.K_UP and (avatar_m.y - delta_pos_coord) >= 0:
                 avatar_m.y -= delta_pos_coord
-            elif ev.key == pygame.K_LEFT and avatar_m.x > -0.5:
+            elif ev.key == pygame.K_LEFT and (avatar_m.x - delta_pos_coord) >= 0:
                 avatar_m.x -= delta_pos_coord
-            elif ev.key == pygame.K_DOWN and avatar_m.y < tilemap.height - 2.2:
+            elif ev.key == pygame.K_DOWN and (avatar_m.y + delta_pos_coord) < tilemap.height:
                 avatar_m.y += delta_pos_coord
