@@ -5,12 +5,12 @@
  </editorsettings>
  <tileset firstgid="1" source="sync-tileset.json"/>
  <tileset firstgid="10" source="sync-tileset.tsx"/>
- <layer id="4" name="Floor Layer" width="30" height="20" offsetx="0" offsety="15">
+ <layer id="4" name="Move Layer" width="30" height="20" offsetx="0" offsety="15">
   <data encoding="base64" compression="zlib">
    eJwTYmBgEAJiTiQsRCHmR6L50eSoaQ8+u7FhWtk5iomPg6FmJzHmUttufhqZO1jjbhSPYnpgQvUOreolQmbSsj7EhQeqbMHWJhgu9vJjwQBrPilu
   </data>
  </layer>
- <layer id="1" name="Tile Layer 1" width="30" height="20">
+ <layer id="1" name="Block Layer" width="30" height="20">
   <data encoding="base64" compression="zlib">
    eJzt08EKwCAMA9AwkZ37x376vBREGIvDNeAMBA8tvItNABLmx4idL1zG9Ea77fsXN9I2kdtbM1zmftxS/WelGx2V67bCXM09azNQ7ubMzVlTNnlg98l74+9octReTgIBzg==
   </data>

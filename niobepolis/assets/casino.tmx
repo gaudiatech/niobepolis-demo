@@ -11,12 +11,12 @@
  <tileset firstgid="10" source="sync-tileset.tsx"/>
  <tileset firstgid="19" source="wip-tileset.tsx"/>
  <tileset firstgid="275" source="temp_entities.tsx"/>
- <layer id="4" name="Floor Layer" width="20" height="15" offsetx="0" offsety="15">
+ <layer id="4" name="Move Layer" width="20" height="15" offsetx="0" offsety="15">
   <data encoding="base64" compression="zlib">
    eJxjYWBgYAFiTiTMQgGmVP8oHsWjeBTjwgBmsQTF
   </data>
  </layer>
- <layer id="1" name="Wall Layer" width="20" height="15">
+ <layer id="1" name="Block Layer" width="20" height="15">
   <data encoding="base64" compression="zlib">
    eJzLZ2BgyKcyphYYNW/UvFHzhr551MQAVCkcnw==
   </data>

@@ -204,7 +204,7 @@ def _init_specific_stuff():
     global map_viewer, maps, mypc
 
     _load_maps()
-    map_viewer = kengi.isometric.IsometricMapViewer0(
+    map_viewer = kengi.isometric.IsometricMapViewer(
         maps[0], screen,
         up_scroll_key=pygame.K_UP, down_scroll_key=pygame.K_DOWN,
         left_scroll_key=pygame.K_LEFT, right_scroll_key=pygame.K_RIGHT
