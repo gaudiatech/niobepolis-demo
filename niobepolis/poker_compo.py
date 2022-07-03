@@ -611,7 +611,7 @@ class UthCtrl(ReceiverObj):
 
         elif ev.type == pygame.KEYDOWN:  # -------- manage keyboard
             if ev.key == pygame.K_ESCAPE:
-                self.pev(EngineEvTypes.GAMEENDS)
+                self.pev(EngineEvTypes.POPSTATE)
 
             if self._mod.autoplay_flag:
                 return

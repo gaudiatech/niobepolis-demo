@@ -1,9 +1,11 @@
 import json
 import re
-import katagames_engine as kengi
+
 import katagames_sdk as katasdk
-import defs
+
 import glvars
+import katagames_engine as kengi
+import defs
 
 
 # - aliases
@@ -454,8 +456,10 @@ class ExtraGuiLayerCtrl(ReceiverObj):
         elif ev.type == defs.MyEvTypes.TerminalStarts:
             self.console.activate()
 
-        elif ev.type == EngineEvTypes.LOGICUPDATE:
+        elif ev.type == defs.MyEvTypes.SlotMachineStarts:
+            self.pev(EngineEvTypes.PUSHSTATE, state_ident=defs.GameStates.Poker)
 
+        elif ev.type == EngineEvTypes.LOGICUPDATE:
             if binded_state and (to_edit is not None):
                 binded_state.cedit_arg = to_edit  # commit name of the file to be edited to VMstate
                 glvars.interruption = WARP_BACK
