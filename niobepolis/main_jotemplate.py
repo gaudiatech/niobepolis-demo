@@ -1,13 +1,16 @@
 import math
 import katagames_engine as kengi
+
 kengi.bootstrap_e()
 
+import declarations_zero
 import demolib.animobs as animobs
+import demolib.dialogue as dialogue
 import demolib.pathfinding as pathfinding
 import game_entities as entities
-from defs import MyEvTypes, MAXFPS, DEBUG
-import demolib.dialogue as dialogue
 
+from declarations_zero import ExtraLayerView, ExtraGuiLayerCtrl, build_console
+from defs import MyEvTypes, MAXFPS, DEBUG
 
 # - aliases
 IsoMap = kengi.isometric.model.IsometricMap
@@ -16,6 +19,7 @@ IsoCursor.new_coord_system = False
 pygame = kengi.pygame
 CgmEvent = kengi.event.CgmEvent
 EngineEvTypes = kengi.event.EngineEvTypes
+ReceiverObj = kengi.event.EventReceiver
 
 # global variables
 conv_viewer = None
@@ -28,6 +32,17 @@ mypc = None
 path_ctrl = None
 screen = None
 tilemap_height = tilemap_width = 0
+
+
+# ---------------------------------------
+#  Add-ons, was previously a part of main_zero.py
+#
+#  will be used in this demo:
+# ---------------------------------------
+# class ExtraLayerView(ReceiverObj)
+# class ExtraGuiLayerCtrl(ReceiverObj)
+# func build_console(screen)
+# --- end of add-ons
 
 
 class MovementPath:
@@ -81,11 +96,11 @@ class MovementPath:
                     nx, ny = self.path.results.pop(0)
 
                 # De-clamp the nugoal coordinates.
-                nx = min([nx, nx-self.mymap.width, nx+self.mymap.width], key=lambda x: abs(x-self.mapob.x))
-                ny = min([ny, ny-self.mymap.height, ny+self.mymap.height], key=lambda y: abs(y-self.mapob.y))
+                nx = min([nx, nx - self.mymap.width, nx + self.mymap.width], key=lambda x: abs(x - self.mapob.x))
+                ny = min([ny, ny - self.mymap.height, ny + self.mymap.height], key=lambda y: abs(y - self.mapob.y))
 
                 self.animob = animobs.MoveModel(
-                    self.mapob, dest=(nx,ny), speed=0.25
+                    self.mapob, dest=(nx, ny), speed=0.25
                 )
             else:
                 # print((self.mapob.x,self.mapob.y))
@@ -109,7 +124,7 @@ class BasicCtrl(kengi.event.EventReceiver):
                 if cursor:
                     cursor.update(map_viewer, event)
                 if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-                    #TODO: There are some glitches in the movement system, when the player character will not move to
+                    # TODO: There are some glitches in the movement system, when the player character will not move to
                     # a tile that has been clicked. It generally happens with tiles that are adjacent to the PC's
                     # current position, but it doesn't happen all the time. I will look into this later.
                     current_path = MovementPath(mypc, map_viewer.cursor.get_pos(), maps[current_tilemap])
@@ -121,9 +136,8 @@ class BasicCtrl(kengi.event.EventReceiver):
                 if conversation_ongoing:
                     # abort
                     self.pev(MyEvTypes.ConvEnds)
-                else:
-                    self.pev(EngineEvTypes.GAMEENDS)
-            elif event.key == pygame.K_TAB and current_tilemap in (0,1):
+
+            elif event.key == pygame.K_TAB and current_tilemap in (0, 1):
                 current_tilemap = 1 - current_tilemap
                 map_viewer.switch_map(maps[current_tilemap])
                 mypc.x = 10
@@ -222,12 +236,7 @@ def _init_specific_stuff():
     cursor_image = pygame.image.load("assets/half-floor-tile.png").convert_alpha()
     cursor_image.set_colorkey((255, 0, 255))
     map_viewer.cursor = IsoCursor(0, 0, cursor_image, maps[0].layers[1])
-
-    GameEventLogger().turn_on()
-    # activate all receivers
-    PathCtrl().turn_on()
     map_viewer.turn_on()
-    BasicCtrl().turn_on()
 
 
 if __name__ == '__main__':
@@ -240,6 +249,21 @@ if __name__ == '__main__':
     kengi.polarbear.my_state.screen = screen
 
     _init_specific_stuff()
+
+    GameEventLogger().turn_on()
+    PathCtrl().turn_on()
+    BasicCtrl().turn_on()
+
+    # add-ons {
+    build_console(screen)
+    ingame_cons = declarations_zero.ingame_console
+    addon_v = ExtraLayerView(ingame_cons)
+    addon_c = ExtraGuiLayerCtrl(ingame_cons)
+    addon_c.mode = 'modern'
+    addon_v.turn_on()
+    addon_c.turn_on()
+    # } im done with add-ons
+
     kengi.get_game_ctrl().turn_on().loop()
     kengi.quit()
     print('bye!')

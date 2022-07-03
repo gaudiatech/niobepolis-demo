@@ -1,9 +1,8 @@
 import json
 import re
-
 import katagames_engine as kengi
 import katagames_sdk as katasdk
-
+import defs
 import glvars
 
 
@@ -58,7 +57,7 @@ def build_console(screen):
         key_calls={},
         vari={"A": 100, "B": 200, "C": 300},
         syntax={re_function: console_func},
-        fontobj=kengi.gui.ImgBasedFont('niobepolis/assets/gibson1_font.png', CON_FONT_COLOR)  # new ft system
+        fontobj=kengi.gui.ImgBasedFont('assets/gibson1_font.png', CON_FONT_COLOR)  # new ft system
     )
     ingame_console.set_motd('-Niobe Polis CONSOLE rdy-\n type "help" if needed')
 
@@ -290,6 +289,8 @@ def dohalt():
     """
     global leaving_niobe
     leaving_niobe = True
+    CgmEvent = kengi.event.CgmEvent
+    kengi.event.EventManager.instance().post(CgmEvent(EngineEvTypes.GAMEENDS))
     return 'quit niobe requested.'
 
 
@@ -362,13 +363,13 @@ def load_isometric_map(csv=False):
     if not webctx():
         # classic way to load map --
         print('load isometric map from regular .JSON')
-        with open('niobepolis/assets/test_map0.json', 'r') as ff:
+        with open('assets/test_map0.json', 'r') as ff:
             jdict = json.load(ff)
     else:
         # alternative way: from frozen json
         jdict = json.loads(get_frozen_json_txt())
 
-    return kengi.isometric.model.IsometricMap.from_json_dict(['niobepolis', 'assets', ], jdict)
+    return kengi.isometric.model.IsometricMap.from_json_dict(['assets', ], jdict)
 
 
 def init_tilemap_etc(screen):
@@ -378,14 +379,14 @@ def init_tilemap_etc(screen):
     tilemap = load_isometric_map(csv=True)
 
     avatar_m = Character(10.5, 10.5)
-    # better display, cosmetic change here
-    avatar_m.ox = 0
-    avatar_m.oy = -8
+    # # better display, cosmetic change here
+    # avatar_m.ox = 0
+    # avatar_m.oy = -8
 
     # add the avatar to the map
     list(tilemap.objectgroups.values())[0].contents.append(avatar_m)
 
-    isomap_viewer = kengi.isometric.IsometricMapViewer(  # TODO unify
+    isomap_viewer = kengi.isometric.IsometricMapViewer0(  # TODO unify
         tilemap, screen,
         up_scroll_key=pygame.K_UP,
         down_scroll_key=pygame.K_DOWN,
@@ -403,7 +404,7 @@ def init_tilemap_etc(screen):
 
     # camera focus avatar
     isomap_viewer.set_focused_object(avatar_m)
-    avatar_m.x += 1  # center the camera, now
+    # avatar_m.x += 1  # center the camera, now
 
     # chunk taken from PBGE, also it sets key repeat freq.
     # - disabled bc of web ctx BUGS! event manager cannot set repeating event, yet
@@ -423,6 +424,7 @@ class ExtraGuiLayerCtrl(ReceiverObj):
         if cons is None:
             raise ValueError('need a real instance of ingame console')
         self.console = cons
+        self.mode = 'legacy'  # you can set this var to 'modern' to use Terminal events instead of F1 to open
 
     def proc_event(self, ev, source=None):
         global t_map_changed
@@ -438,26 +440,19 @@ class ExtraGuiLayerCtrl(ReceiverObj):
             #     dx = 0
 
         elif ev.type == pygame.KEYDOWN:
-            if ev.key == pygame.K_F1:
+            if self.mode == 'legacy' and ev.key == pygame.K_F1:
                 if not self.console.active:
                     self.console.activate()
                     isomap_viewer.pause_draw()
                 else:
                     self.console.desactivate()
                     isomap_viewer.resume_draw()
+            elif self.mode == 'modern' and ev.key == pygame.K_ESCAPE:
+                if self.console.active:
+                    self.console.desactivate()
 
-            # TODO active console has to block key press, in the new system TOO!
-            # example (old system):
-            if not self.console.active:
-                pass
-            #     elif ev.key == pygame.K_RIGHT:
-            #         dx = -1
-            #     elif ev.key == pygame.K_LEFT:
-            #         dx = +1
-            #     elif ev.key == pygame.K_UP:
-            #         dy = +1
-            #     elif ev.key == pygame.K_DOWN:
-            #         dy = -1
+        elif ev.type == defs.MyEvTypes.TerminalStarts:
+            self.console.activate()
 
         elif ev.type == EngineEvTypes.LOGICUPDATE:
 
@@ -491,8 +486,8 @@ class Character(kengi.isometric.model.IsometricMapObject):
         self.x = x
         self.y = y
 
-        self.surf = pygame.image.load("niobepolis/assets/sys_icon.png").convert_alpha()
-        self.ht = pygame.image.load("niobepolis/assets/half-floor-tile.png").convert_alpha()
+        self.surf = pygame.image.load("assets/sys_icon.png").convert_alpha()
+        self.ht = pygame.image.load("assets/half-floor-tile.png").convert_alpha()
         self.ht.set_colorkey((255, 0, 255))
         # self.surf.set_colorkey((0,0,255))
         self.ox = self.oy = 0
