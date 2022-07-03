@@ -341,41 +341,41 @@ class UthModel(kengi.event.CogObj):
 # -----------------------------------------------------------------/
 #              ******** VIEW ********
 # -----------------------------------------------------------------/
-BACKGROUND_IMG_PATH = 'assets/bg0.jpg'
-CARD_SIZE_PX = (82, 120)
-CHIP_SIZE_PX = (62, 62)
-POS_CASH = (1192, 1007)
+BACKGROUND_IMG_PATH = 'assets/pokerbackground.png'
+CARD_SIZE_PX = (69, 101) #(82, 120)
+CHIP_SIZE_PX = (40, 40) #(62, 62)
+POS_CASH = (1192/2, 1007/2)
 CARD_SLOTS_POS = {  # coords in pixel so cards/chips & BG image do match; cards img need an anchor at the middle.
-    'dealer1': (905, 329),
-    'dealer2': (1000, 333),
+    'dealer1': (430, 134),
+    'dealer2': (530, 134),
 
-    'flop3': (980, 470),
-    'flop2': (1075, 473),
-    'flop1': (1173, 471),
+    'flop3': (510, 260),
+    'flop2': (590, 260),
+    'flop1': (670, 260),
 
-    'turn': (846, 473),
-    'river': (744, 471),
+    'turn': (290, 260),
+    'river': (370, 260),
 
-    'player1': (1125, 878),
-    'player2': (1041, 880),
+    'player1': (670, 400),
+    'player2': (590, 400),
 
-    'ante': (935, 757),
-    'bet': (935, 850),
-    'blind': (1040, 757),
+    'ante': (935/2, 757/2),
+    'bet': (935/2, 850/2),
+    'blind': (1040/2, 757/2),
 
-    'raise1': (955, 870),
-    'raise2': (961, 871),
-    'raise3': (967, 872),
-    'raise4': (973, 873),
-    'raise5': (980, 875),
-    'raise6': (986, 876)
+    'raise1': (955/2, 870/2),
+    'raise2': (961/2, 871/2),
+    'raise3': (967/2, 872/2),
+    'raise4': (973/2, 873/2),
+    'raise5': (980/2, 875/2),
+    'raise6': (986/2, 876/2)
 }
 PLAYER_CHIPS = {
-    '2a': (825, 1000),
-    '2b': (905, 1000),
-    '5': (985, 1000),
-    '10': (1065, 1000),
-    '20': (1145, 1000)
+    '2a': (825/2, 1000/2),
+    '2b': (905/2, 1000/2),
+    '5': (985/2, 1000/2),
+    '10': (1065/2, 1000/2),
+    '20': (1145/2, 1000/2)
 }
 
 
@@ -386,17 +386,15 @@ class UthView(ReceiverObj):
 
     def __init__(self, model):
         super().__init__()
-        self._assets_rdy = False
-
         self.bg = None
-        self.card_back_img = None
-
-        self.card_images = dict()
+        self._my_assets = dict()
         self.chip_spr = dict()
 
+        self._assets_rdy = False
+
         self._mod = model
-        self.ft = pygame.font.Font(None, 72)
-        self.small_ft = pygame.font.Font(None, 23)
+        self.ft = pygame.font.Font(None, 34)
+        self.small_ft = pygame.font.Font(None, 21)
 
         self.info_msg0 = None
         self.info_msg1 = None  # will be used to tell the player what he/she has to do!
@@ -406,31 +404,31 @@ class UthView(ReceiverObj):
         self.cash_etq = self.ft.render(str(self._mod.cash)+'$ ', True, self.TEXTCOLOR, self.BG_TEXTCOLOR)
 
     def _load_assets(self):
-        self._assets_rdy = True
-
         self.bg = pygame.image.load(BACKGROUND_IMG_PATH)
-        self.card_back_img = pygame.image.load('assets/source_cards/back-of-card.png').convert_alpha()
-        self.card_back_img = pygame.transform.scale(self.card_back_img, CARD_SIZE_PX)
-
+        spr_sheet = kengi.gfx.JsonBasedSprSheet('assets/french-cards')
+        self._my_assets['card_back'] = pygame.transform.scale(spr_sheet['back-of-card.png'], CARD_SIZE_PX)
         for card_cod in StandardCard.all_card_codes():
             y = PokerHand.adhoc_mapping(card_cod[0]).lstrip('0') + card_cod[1].upper()  # convert card code to path
-            img_path = f'assets/source_cards/{y}.png'
-            tempimg = pygame.image.load(img_path).convert_alpha()
-            self.card_images[card_cod] = pygame.transform.scale(tempimg, CARD_SIZE_PX)
+            self._my_assets[card_cod] = pygame.transform.scale(spr_sheet[f'{y}.png'], CARD_SIZE_PX)
 
+        spr_sheet2 = kengi.gfx.JsonBasedSprSheet('assets/pokerchips')
         for chip_val_info in ('2a', '2b', '5', '10', '20'):
-            org = chip_val_info
-            if chip_val_info == '2a' or chip_val_info == '2b':
-                chip_val_info = '2'
-            img_path = f'assets/chip{chip_val_info}.png'
-            tempimg = pygame.image.load(img_path).convert_alpha()
-            tempimg = pygame.transform.scale(tempimg, CHIP_SIZE_PX)
+            y = {
+                '2a': 'chip02.png',
+                '2b': 'chip02.png',
+                '5': 'chip05.png',
+                '10': 'chip10.png',
+                '20': 'chip20.png'
+            }[chip_val_info]  # adapt filename
+            tempimg = pygame.transform.scale(spr_sheet2[y], CHIP_SIZE_PX)
             tempimg.set_colorkey((255, 0, 255))
             spr = pygame.sprite.Sprite()
             spr.image = tempimg
             spr.rect = spr.image.get_rect()
-            spr.rect.center = PLAYER_CHIPS[org]
-            self.chip_spr[chip_val_info] = spr
+            spr.rect.center = PLAYER_CHIPS[chip_val_info]
+            self.chip_spr['2' if chip_val_info in ('2a', '2b') else chip_val_info] = spr
+
+        self._assets_rdy = True
 
     def _update_displayed_status(self):
 
@@ -526,40 +524,41 @@ class UthView(ReceiverObj):
 
     def _paint(self, scr):
         scr.blit(self.bg, (0, 0))
+        cardback = self._my_assets['card_back']
 
         # ---------- draw visible or hidden cards ---------
         if self._mod.stage == UthModel.INIT_ST_CODE:
             # draw hidden cards' back, at adhoc location
             for loc in ('dealer1', 'dealer2', 'player1', 'player2'):
-                UthView.centerblit(scr, self.card_back_img, CARD_SLOTS_POS[loc])
+                UthView.centerblit(scr, cardback, CARD_SLOTS_POS[loc])
 
         if self._mod.stage >= UthModel.DISCOV_ST_CODE:  # cards revealed
             # draw hidden cards' back, at adhoc location
             for k in range(1, 3+1):
-                UthView.centerblit(scr, self.card_back_img, CARD_SLOTS_POS['flop'+str(k)])
+                UthView.centerblit(scr, cardback, CARD_SLOTS_POS['flop'+str(k)])
 
             for loc in ('dealer1', 'dealer2'):
-                UthView.centerblit(scr, self.card_back_img, CARD_SLOTS_POS[loc])
+                UthView.centerblit(scr, cardback, CARD_SLOTS_POS[loc])
             for k, c in enumerate(self._mod.player_hand):
                 slotname = 'player'+str(k+1)
-                UthView.centerblit(scr, self.card_images[c.code], CARD_SLOTS_POS[slotname])
+                UthView.centerblit(scr, self._my_assets[c.code], CARD_SLOTS_POS[slotname])
 
         if self._mod.stage >= UthModel.FLOP_ST_CODE:
             # draw hidden cards' back, at adhoc location
             for loc in ('turn', 'river'):
-                UthView.centerblit(scr, self.card_back_img, CARD_SLOTS_POS[loc])
+                UthView.centerblit(scr, cardback, CARD_SLOTS_POS[loc])
             for k, c in enumerate(self._mod.flop_cards):
                 slotname = 'flop'+str(k+1)
-                UthView.centerblit(scr, self.card_images[c.code], CARD_SLOTS_POS[slotname])
+                UthView.centerblit(scr, self._my_assets[c.code], CARD_SLOTS_POS[slotname])
 
         if self._mod.stage >= UthModel.TR_ST_CODE:
-            UthView.centerblit(scr, self.card_images[self. _mod.turnriver_cards[0].code], CARD_SLOTS_POS['turn'])
-            UthView.centerblit(scr, self.card_images[self._mod.turnriver_cards[1].code], CARD_SLOTS_POS['river'])
+            UthView.centerblit(scr, self._my_assets[self. _mod.turnriver_cards[0].code], CARD_SLOTS_POS['turn'])
+            UthView.centerblit(scr, self._my_assets[self._mod.turnriver_cards[1].code], CARD_SLOTS_POS['river'])
 
         if self._mod.revealed['dealer1'] and self._mod.revealed['dealer2']:
             # show what the dealer has
-            UthView.centerblit(scr, self.card_images[self._mod.dealer_hand[0].code], CARD_SLOTS_POS['dealer1'])
-            UthView.centerblit(scr, self.card_images[self._mod.dealer_hand[1].code], CARD_SLOTS_POS['dealer2'])
+            UthView.centerblit(scr, self._my_assets[self._mod.dealer_hand[0].code], CARD_SLOTS_POS['dealer1'])
+            UthView.centerblit(scr, self._my_assets[self._mod.dealer_hand[1].code], CARD_SLOTS_POS['dealer2'])
 
         # -- draw amounts for ante, blind and the bet
         for info_e in self._mod.money_info:
