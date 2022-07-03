@@ -17,5 +17,15 @@ MyEvTypes = kengi.event.enum_ev_types(
     'PortalActivates',  # contains portal_id
 
     'TerminalStarts',
-    'SlotMachineStarts'
+    'SlotMachineStarts',
+    
+    # -----------------------
+    #  related to poker
+    # -----------------------
+    'CashChanges',  # contains int "value"
+    'StageChanges',
+    'EndRoundRequested',
+    'Victory',  # contains: amount
+    'Tie',
+    'Defeat'  # contains: loss
 )
