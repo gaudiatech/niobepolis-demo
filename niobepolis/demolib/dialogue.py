@@ -8,7 +8,6 @@ import os
 
 # - aliases
 frects = kengi.polarbear.frects
-default_border = kengi.polarbear.default_border
 draw_text = kengi.polarbear.draw_text
 pygame = kengi.pygame
 
@@ -86,7 +85,6 @@ class ConversationView(EventReceiver):
         self.curr_offer = root_offer
         self.dialog_upto_date = False
         self.existing_menu = None
-        self.screen = kengi.get_surface()
 
     def turn_off(self):  # because the conversation view can be closed from "outside" i.e. the main program
         if defs.DEBUG:
@@ -98,7 +96,7 @@ class ConversationView(EventReceiver):
 
     def proc_event(self, ev, source):
         if ev.type == EngineEvTypes.PAINT:
-            self.render()
+            self.render(ev.screen)
 
         elif ev.type == EngineEvTypes.LOGICUPDATE:
             if self.curr_offer is not None:
@@ -138,13 +136,14 @@ class ConversationView(EventReceiver):
             self.dialog_upto_date = False
             self.curr_offer = ev.value
 
-    def render(self):
+    def render(self, scr):
         if self.pre_render:
             self.pre_render()
         text_rect = self.TEXT_AREA.get_rect()
-        default_border.render(text_rect)
-        draw_text(self.font, self.text, text_rect)
-        default_border.render(self.MENU_AREA.get_rect())
-        if self.portrait:
-            self.screen.blit(self.portrait, self.PORTRAIT_AREA.get_rect())
+        dborder = kengi.polarbear.default_border
 
+        dborder.render(text_rect)
+        draw_text(self.font, self.text, text_rect)
+        dborder.render(self.MENU_AREA.get_rect())
+        if self.portrait:
+            scr.blit(self.portrait, self.PORTRAIT_AREA.get_rect())

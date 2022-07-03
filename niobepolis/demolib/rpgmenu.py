@@ -125,8 +125,7 @@ class Menu(ReceiverObj, Frect):  # N.B (tom) it would be better to inherit from 
         # predraw is a function that
         # redraws/clears the screen before the menu is rendered.
         self.predraw = predraw
-
-        self.screen = kengi.get_surface()
+        print('  PREDRAW func --> ', predraw)
 
         # -> to the model
         self.no_choice_made = True
@@ -167,20 +166,21 @@ class Menu(ReceiverObj, Frect):  # N.B (tom) it would be better to inherit from 
             item_num -= 1
             y -= self.padding
 
-    def render(self, do_extras=True):
+    def render(self, scr, do_extras=True):
         mydest = self.get_rect()
         if do_extras:
             if self.predraw:
-                self.predraw()
+                self.predraw(scr)
+
             if self.border:
                 self.border.render(mydest)
 
-        self.screen.set_clip(mydest)
+        scr.set_clip(mydest)
         self.arrange()
         for item_num, area in list(self._item_rects.items()):
-            self.items[item_num].render(self.screen, area, (item_num == self.selected_item) and do_extras)
+            self.items[item_num].render(scr, area, (item_num == self.selected_item) and do_extras)
 
-        self.screen.set_clip(None)
+        scr.set_clip(None)
 
         if self.descobj:
             self.descobj(self.get_current_item())
@@ -220,7 +220,7 @@ class Menu(ReceiverObj, Frect):  # N.B (tom) it would be better to inherit from 
         #     self.render()
         #     kengi.flip()
         if pc_input.type == EngineEvTypes.PAINT:
-            self.render()
+            self.render(pc_input.screen)
 
         elif pc_input.type == pygame.KEYDOWN:
             # A key was pressed, oh happy day! See what key it was and act
