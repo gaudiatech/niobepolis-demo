@@ -1,12 +1,14 @@
 import os
 
-import demolib.dialogue as dialogue
 import katagames_engine as kengi
 from defs import MyEvTypes
+
 
 pygame = kengi.pygame
 evmodule = kengi.event
 CgmEvent = kengi.event.CgmEvent
+EngineEvTypes = kengi.event.EngineEvTypes
+dialogue = kengi.demolib.dialogue
 
 
 class Character(kengi.isometric.model.IsometricMapObject):
@@ -69,7 +71,7 @@ class NPC(kengi.isometric.model.IsometricMapObject):
             with open(os.path.join("assets", self.properties["conversation"]), 'r') as fconv:
                 myconvo = dialogue.Offer.load_jsondata(fconv.read())
                 evmodule.EventManager.instance().post(
-                    CgmEvent(MyEvTypes.ConvStarts, convo_obj=myconvo, portrait=self.properties.get("portrait"))
+                    CgmEvent(EngineEvTypes.CONVSTARTS, convo_obj=myconvo, portrait=self.properties.get("portrait"))
                 )
 
 

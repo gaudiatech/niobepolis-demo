@@ -388,7 +388,7 @@ def init_tilemap_etc(screen):
     # add the avatar to the map
     list(tilemap.objectgroups.values())[0].contents.append(avatar_m)
 
-    isomap_viewer = kengi.isometric.IsometricMapViewer0(  # TODO unify
+    isomap_viewer = kengi.isometric.IsometricMapViewer(  # TODO unify
         tilemap, screen,
         up_scroll_key=pygame.K_UP,
         down_scroll_key=pygame.K_DOWN,

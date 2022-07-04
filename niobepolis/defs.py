@@ -13,11 +13,6 @@ GameStates = kengi.struct.enum(
 MyEvTypes = kengi.event.enum_ev_types(
     'MapChanges',  # contains new_map, gate_name
 
-    'ConvStarts',  # contains convo_obj, portrait
-
-    'ConvChoice',  # contains value
-    'ConvEnds',
-
     # in Niobe Polis a portal can teleport you(tp) to another world
     'PortalActivates',  # contains portal_id
 

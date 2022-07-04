@@ -2,9 +2,6 @@ import math
 import os
 
 import declarations_zero
-import demolib.animobs as animobs
-import demolib.dialogue as dialogue
-import demolib.pathfinding as pathfinding
 import game_entities as entities
 import katagames_engine as kengi
 from declarations_zero import ExtraLayerView, ExtraGuiLayerCtrl
@@ -12,6 +9,10 @@ from defs import MyEvTypes, DEBUG
 
 
 # - aliases
+animobs = kengi.demolib.animobs
+dialogue = kengi.demolib.dialogue
+pathfinding = kengi.demolib.pathfinding
+
 EngineEvTypes = kengi.event.EngineEvTypes
 pygame = kengi.pygame
 BaseGameState = kengi.BaseGameState
@@ -183,7 +184,7 @@ class BasicCtrl(kengi.event.EventReceiver):
             mypc.y = new_gate.y + 0.5
             map_viewer.switch_map(maps[current_tilemap])
 
-        elif event.type == MyEvTypes.ConvStarts:
+        elif event.type == EngineEvTypes.CONVSTARTS:
             conversation_ongoing = True
             conv_viewer = dialogue.ConversationView(
                 event.convo_obj, "assets/DejaVuSansCondensed-Bold.ttf", os.path.join("assets", event.portrait)
@@ -206,7 +207,7 @@ class PathCtrl(kengi.event.EventReceiver):
                         current_path.goal.bump()
                     current_path = None
 
-        elif event.type == MyEvTypes.ConvEnds:
+        elif event.type == EngineEvTypes.CONVENDS:
             conversation_ongoing = False  # unlock player movements
             if conv_viewer.active:
                 conv_viewer.turn_off()
