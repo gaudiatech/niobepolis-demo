@@ -210,7 +210,7 @@ def _init_specific_stuff():
         left_scroll_key=pygame.K_LEFT, right_scroll_key=pygame.K_RIGHT
     )
     # - add map entities
-    mypc = entities.Character(10, 10)
+    mypc = entities.Character(20, 10)
     for tm in maps:
         list(tm.objectgroups.values())[0].contents.append(mypc)
 
