@@ -1,4 +1,5 @@
 import math
+import os
 
 import declarations_zero
 import demolib.animobs as animobs
@@ -184,7 +185,9 @@ class BasicCtrl(kengi.event.EventReceiver):
 
         elif event.type == MyEvTypes.ConvStarts:
             conversation_ongoing = True
-            conv_viewer = dialogue.ConversationView(event.convo_obj, event.portrait)
+            conv_viewer = dialogue.ConversationView(
+                event.convo_obj, "assets/DejaVuSansCondensed-Bold.ttf", os.path.join("assets", event.portrait)
+            )
             conv_viewer.turn_on()
 
 

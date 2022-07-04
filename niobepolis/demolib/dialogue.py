@@ -71,14 +71,14 @@ class ConversationView(EventReceiver):
     MENU_AREA = frects.Frect(-75, 30, 300, 80)
     PORTRAIT_AREA = frects.Frect(-240, -110, 150, 225)
 
-    def __init__(self, root_offer, portrait=None, pre_render=None):
+    def __init__(self, root_offer, chosen_font, portrait_fn=None, pre_render=None):
         super().__init__()
         self.text = ''
         self.root_offer = root_offer
         self.pre_render = pre_render
-        self.font = pygame.font.Font("assets/DejaVuSansCondensed-Bold.ttf", 13)
-        if portrait:
-            self.portrait = pygame.image.load(os.path.join("assets", portrait)).convert_alpha()
+        self.font = pygame.font.Font(chosen_font, 13)
+        if portrait_fn:
+            self.portrait = pygame.image.load(portrait_fn).convert_alpha()
         else:
             self.portrait = None
 
