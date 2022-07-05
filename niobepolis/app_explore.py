@@ -1,23 +1,26 @@
 import math
-import katagames_engine as kengi
-kengi.bootstrap_e()
+import os
 
-import demolib.animobs as animobs
-import demolib.pathfinding as pathfinding
+import declarations_zero
 import game_entities as entities
-from defs import MyEvTypes, MAXFPS, DEBUG
-import demolib.dialogue as dialogue
+import katagames_engine as kengi
+from declarations_zero import ExtraLayerView, ExtraGuiLayerCtrl
+from defs import MyEvTypes, DEBUG
 
 
 # - aliases
-IsoMap = kengi.isometric.model.IsometricMap
-IsoCursor = kengi.isometric.extras.IsometricMapQuarterCursor
-IsoCursor.new_coord_system = False
-pygame = kengi.pygame
-CgmEvent = kengi.event.CgmEvent
+animobs = kengi.demolib.animobs
+dialogue = kengi.demolib.dialogue
+pathfinding = kengi.demolib.pathfinding
+
 EngineEvTypes = kengi.event.EngineEvTypes
+pygame = kengi.pygame
+BaseGameState = kengi.BaseGameState
+IsoCursor = kengi.isometric.extras.IsometricMapQuarterCursor
+IsoMap = kengi.isometric.model.IsometricMap
 
 # global variables
+main_map_path = 'neo_exterior.tmx'
 conv_viewer = None
 conversation_ongoing = False
 current_path = None
@@ -29,7 +32,48 @@ path_ctrl = None
 screen = None
 tilemap_height = tilemap_width = 0
 
+# dirty patch
+IsoCursor.new_coord_system = False
 
+
+def _load_maps():
+    global maps, tilemap_width, tilemap_height
+    maps = [
+        IsoMap.load(['assets', ], main_map_path, entities.OBJECT_CLASSES),
+        IsoMap.load(['assets', ], 'test_map0.tmx', entities.OBJECT_CLASSES),
+        IsoMap.load(['assets', ], 'small_map.tmx', entities.OBJECT_CLASSES),
+        IsoMap.load(['assets', ], 'casino.tmx', entities.OBJECT_CLASSES)
+    ]
+    tilemap_width, tilemap_height = maps[0].width, maps[0].height
+
+
+def _init_specific_stuff(refscr):
+    global map_viewer, maps, mypc
+
+    _load_maps()
+    map_viewer = kengi.isometric.IsometricMapViewer(
+        maps[0], refscr,
+        up_scroll_key=pygame.K_UP, down_scroll_key=pygame.K_DOWN,
+        left_scroll_key=pygame.K_LEFT, right_scroll_key=pygame.K_RIGHT
+    )
+    # - add map entities
+    mypc = entities.Character(10, 10)
+    for tm in maps:
+        list(tm.objectgroups.values())[0].contents.append(mypc)
+
+    map_viewer.set_focused_object(mypc)
+    # force: center on avatar op.
+    mypc.x += 0.5
+
+    # the rest
+    cursor_image = pygame.image.load("assets/half-floor-tile.png").convert_alpha()
+    cursor_image.set_colorkey((255, 0, 255))
+
+    map_viewer.cursor = IsoCursor(0, 0, cursor_image, maps[0].layers[1])
+    return map_viewer
+
+
+# ------------- util class for movement -------------
 class MovementPath:
     def __init__(self, mapob, dest, mymap):
         self.mapob = mapob
@@ -81,16 +125,13 @@ class MovementPath:
                     nx, ny = self.path.results.pop(0)
 
                 # De-clamp the nugoal coordinates.
-                nx = min([nx, nx-self.mymap.width, nx+self.mymap.width], key=lambda x: abs(x-self.mapob.x))
-                ny = min([ny, ny-self.mymap.height, ny+self.mymap.height], key=lambda y: abs(y-self.mapob.y))
+                nx = min([nx, nx - self.mymap.width, nx + self.mymap.width], key=lambda x: abs(x - self.mapob.x))
+                ny = min([ny, ny - self.mymap.height, ny + self.mymap.height], key=lambda y: abs(y - self.mapob.y))
 
                 self.animob = animobs.MoveModel(
-                    self.mapob, dest=(nx,ny), speed=0.25
+                    self.mapob, dest=(nx, ny), speed=0.25
                 )
             else:
-                # print((self.mapob.x,self.mapob.y))
-                # sx, sy = viewer.screen_coords(self.mapob.x, self.mapob.y, 0, -8)
-                # print(viewer.map_x(sx, sy, return_int=False), viewer.map_y(sx, sy, return_int=False))
                 return True
 
 
@@ -109,7 +150,7 @@ class BasicCtrl(kengi.event.EventReceiver):
                 if cursor:
                     cursor.update(map_viewer, event)
                 if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-                    #TODO: There are some glitches in the movement system, when the player character will not move to
+                    # TODO: There are some glitches in the movement system, when the player character will not move to
                     # a tile that has been clicked. It generally happens with tiles that are adjacent to the PC's
                     # current position, but it doesn't happen all the time. I will look into this later.
                     current_path = MovementPath(mypc, map_viewer.cursor.get_pos(), maps[current_tilemap])
@@ -121,9 +162,8 @@ class BasicCtrl(kengi.event.EventReceiver):
                 if conversation_ongoing:
                     # abort
                     self.pev(MyEvTypes.ConvEnds)
-                else:
-                    self.pev(EngineEvTypes.GAMEENDS)
-            elif event.key == pygame.K_TAB and current_tilemap in (0,1):
+
+            elif event.key == pygame.K_TAB and current_tilemap in (0, 1):
                 current_tilemap = 1 - current_tilemap
                 map_viewer.switch_map(maps[current_tilemap])
                 mypc.x = 10
@@ -139,9 +179,11 @@ class BasicCtrl(kengi.event.EventReceiver):
             mypc.y = new_gate.y + 0.5
             map_viewer.switch_map(maps[current_tilemap])
 
-        elif event.type == MyEvTypes.ConvStarts:
+        elif event.type == EngineEvTypes.CONVSTARTS:
             conversation_ongoing = True
-            conv_viewer = dialogue.ConversationView(event.convo_obj, event.portrait)
+            conv_viewer = dialogue.ConversationView(
+                event.convo_obj, "assets/DejaVuSansCondensed-Bold.ttf", os.path.join("assets", event.portrait)
+            )
             conv_viewer.turn_on()
 
 
@@ -160,86 +202,55 @@ class PathCtrl(kengi.event.EventReceiver):
                         current_path.goal.bump()
                     current_path = None
 
-        elif event.type == MyEvTypes.ConvEnds:
+        elif event.type == EngineEvTypes.CONVENDS:
             conversation_ongoing = False  # unlock player movements
             if conv_viewer.active:
                 conv_viewer.turn_off()
 
 
-# ------------------------------------
-#  Temporary class: DEBUG tool
-#  we use this class only to ensure that game entities fire up events
-# ------------------------------------
-class GameEventLogger(kengi.event.EventReceiver):
-    def __init__(self):
-        super().__init__()
+class ExploreState(BaseGameState):
+    def __init__(self, gs_id):
+        super().__init__(gs_id)
+        self.m = self.v = self.v2 = self.c = None
 
-    def proc_event(self, ev, source):
-        if ev.type == MyEvTypes.TerminalStarts:
-            print('Terminal ---------')
-        elif ev.type == MyEvTypes.SlotMachineStarts:
-            print('Slot machine------------')
-        elif ev.type == MyEvTypes.PortalActivates:
-            print('portal has been activated! portal_id= ', ev.portal_id)
+    def enter(self):
+        the_screen = kengi.get_surface()
 
+        self.v = _init_specific_stuff(the_screen)
+        self.v.turn_on()
 
-def _load_maps():
-    global maps, tilemap_width, tilemap_height
-    maps.append(
-        IsoMap.load(['assets', ], 'neo_exterior.tmx', entities.OBJECT_CLASSES)
-    )
-    maps.append(
-        IsoMap.load(['assets', ], 'test_map0.tmx', entities.OBJECT_CLASSES)
-    )
-    maps.append(
-        IsoMap.load(['assets', ], 'small_map.tmx', entities.OBJECT_CLASSES)
-    )
-    maps.append(
-        IsoMap.load(['assets', ], 'casino.tmx', entities.OBJECT_CLASSES)
-    )
-    tilemap_width, tilemap_height = maps[0].width, maps[0].height
+        # GameEventLogger().turn_on()
+        PathCtrl().turn_on()
+        BasicCtrl().turn_on()
 
+        declarations_zero.build_console(the_screen)
+        ingame_cons = declarations_zero.ingame_console
+        self.v2 = ExtraLayerView(ingame_cons)
+        self.v2.turn_on()
 
-def _init_specific_stuff():
-    global map_viewer, maps, mypc
+        # self.m = UthModel()
+        # self.v = UthView(self.m)
+        # self.v.turn_on()
+        tmp = ExtraGuiLayerCtrl(ingame_cons)
+        tmp.mode = 'modern'
+        self.c = tmp
+        self.c.turn_on()
 
-    _load_maps()
-    map_viewer = kengi.isometric.IsometricMapViewer(
-        maps[0], screen,
-        up_scroll_key=pygame.K_UP, down_scroll_key=pygame.K_DOWN,
-        left_scroll_key=pygame.K_LEFT, right_scroll_key=pygame.K_RIGHT
-    )
-    # - add map entities
-    mypc = entities.Character(20, 10)
-    for tm in maps:
-        list(tm.objectgroups.values())[0].contents.append(mypc)
+    def pause(self):
+        self.c.turn_off()
+        self.v2.turn_off()
+        self.v.turn_off()
 
-    map_viewer.set_focused_object(mypc)
-    # force: center on avatar op.
-    mypc.x += 0.5
+    def resume(self):
+        kengi.screen_param('old_school')
 
-    # the rest
-    cursor_image = pygame.image.load("assets/half-floor-tile.png").convert_alpha()
-    cursor_image.set_colorkey((255, 0, 255))
-    map_viewer.cursor = IsoCursor(0, 0, cursor_image, maps[0].layers[1])
+        self.v.screen = kengi.get_surface()  # manually update the ref on vscreen
 
-    GameEventLogger().turn_on()
-    # activate all receivers
-    PathCtrl().turn_on()
-    map_viewer.turn_on()
-    BasicCtrl().turn_on()
+        self.v.turn_on()
+        self.v2.turn_on()
+        self.c.turn_on()
 
-
-if __name__ == '__main__':
-    kengi.init('old_school', maxfps=MAXFPS)
-    screen = kengi.get_surface()
-
-    # TODO remove dependency in demolib/dialogue.py -> polarbear
-    # so we dont need this deprecated sm anymore
-    # In the meantime this line is mandatory
-    kengi.polarbear.my_state.screen = screen
-
-    _init_specific_stuff()
-    kengi.get_game_ctrl().turn_on().loop()
-    kengi.quit()
-    print('bye!')
+    def release(self):
+        self.c.turn_off()
+        self.c = None
+        self.v = None

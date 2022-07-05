@@ -10,7 +10,7 @@
  <tileset firstgid="273" source="npcs.tsx"/>
  <tileset firstgid="298" source="sync-tileset.json"/>
  <tileset firstgid="307" source="sync-tileset.tsx"/>
- <tileset firstgid="316" source="../../../kengi/examples/isometric1/assets/sync-tileset.tsx"/>
+ <tileset firstgid="316" source="sync-tileset.tsx"/>
  <layer id="1" name="Move Layer" width="30" height="60" offsetx="0" offsety="15">
   <data encoding="base64" compression="zlib">
    eJy9mEtOwzAQhucsKM2jTSQQXIlHeYsdlAXnYYnEjov0Iqyxpfnl6WA3TmJ7pF9u48SfZ2yPLRMts8aoN6pZd0aXRvcL241hro02XObmVsy1Gvh/VYC7EWqNVvw7N7djnvWxJxfvEuNr/bNzqeHfQ0LueqTexrdl7ioBF+0hhsOR996MHllLuJ3g2XYbcj5t1LuI7Y3RFet2JhfroiHnd83PNFfmiheijwdTWr3P4GJuYs52zB9Ymi1jq+umWEcu/9RcwlfkiRC3Uv2fYpbVklufVivmtyPcgVyuXvN3sQYe8i5ii5xk607IjYPm4h3MzVhruE3EtOU+wF/4g3Z9/qJP6INvfLR1zEAbFR2uLYyBLzcOHJdaCO11ET7je5kz4KttA3HWe1BPbmzwfR3Bk1y0i3W0ov/rWo9vT4drXu5bMXMMa7WiwzyCNSbb0OuoYi76t6FpcwxzE/2GD+iTjzu2j6Q0yUW/SnMR3xx2eoSr8/OUfDXVxH5EO1WXy3drr0bXRltycwv5pjryXax9Ge2Nvrncizo9p/tETGnfXIJ77uHmGFdwPwNc5Odc3LMAF2Ob2n64vBDPdK6cetaYYr8Bru/cmct0nGP325Rc7MG+c29O7kBuv8cZCftyLi5ypTx/5szROlfiXFXC9NzKkTu06TuVEucOnHclt0SMfXcbOfOVthJ3G7m4XUC6LhU3xIvRXO4SZmmuvMt5nsmdw051lzM3ttbXJXc5IXbouc5Rvu+WsEPPx7hL2SW5khPqTy7usb6U5kq2PN88Cu0KcO355kpoS4f+pzbbpj1XPQg90f+45+DGzO8cNsYtYSX9ncv9A9lxqVk=
