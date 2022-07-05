@@ -20,6 +20,7 @@ IsoCursor = kengi.isometric.extras.IsometricMapQuarterCursor
 IsoMap = kengi.isometric.model.IsometricMap
 
 # global variables
+main_map_path = 'neo_exterior.tmx'
 conv_viewer = None
 conversation_ongoing = False
 current_path = None
@@ -37,18 +38,12 @@ IsoCursor.new_coord_system = False
 
 def _load_maps():
     global maps, tilemap_width, tilemap_height
-    maps.append(
-        IsoMap.load(['assets', ], 'neo_exterior.tmx', entities.OBJECT_CLASSES)
-    )
-    maps.append(
-        IsoMap.load(['assets', ], 'test_map0.tmx', entities.OBJECT_CLASSES)
-    )
-    maps.append(
-        IsoMap.load(['assets', ], 'small_map.tmx', entities.OBJECT_CLASSES)
-    )
-    maps.append(
+    maps = [
+        IsoMap.load(['assets', ], main_map_path, entities.OBJECT_CLASSES),
+        IsoMap.load(['assets', ], 'test_map0.tmx', entities.OBJECT_CLASSES),
+        IsoMap.load(['assets', ], 'small_map.tmx', entities.OBJECT_CLASSES),
         IsoMap.load(['assets', ], 'casino.tmx', entities.OBJECT_CLASSES)
-    )
+    ]
     tilemap_width, tilemap_height = maps[0].width, maps[0].height
 
 
