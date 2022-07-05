@@ -72,7 +72,7 @@
          "name":"Object Layer 1",
          "objects":[],
          "offsetx":0,
-         "offsety":4,
+         "offsety":8,
          "opacity":1,
          "type":"objectgroup",
          "visible":true,
