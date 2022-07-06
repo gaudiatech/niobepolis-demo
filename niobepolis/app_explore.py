@@ -182,7 +182,7 @@ class BasicCtrl(kengi.event.EventReceiver):
         elif event.type == EngineEvTypes.CONVSTARTS:
             conversation_ongoing = True
             conv_viewer = dialogue.ConversationView(
-                event.convo_obj, "assets/DejaVuSansCondensed-Bold.ttf", os.path.join("assets", event.portrait)
+                event.convo_obj, None, 18, os.path.join("assets", event.portrait)
             )
             conv_viewer.turn_on()
 

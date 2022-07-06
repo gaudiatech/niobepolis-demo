@@ -59,7 +59,7 @@ def build_console(screen):
         key_calls={},
         vari={"A": 100, "B": 200, "C": 300},
         syntax={re_function: console_func},
-        fontobj=kengi.gui.ImgBasedFont('assets/gibson1_font.png', CON_FONT_COLOR)  # new ft system
+        fontobj=pygame.font.Font(None, 21)
     )
     ingame_console.set_motd('-Niobe Polis CONSOLE rdy-\n type "help" if needed')
 
