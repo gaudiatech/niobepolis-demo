@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.8" tiledversion="1.8.4" orientation="isometric" renderorder="right-down" width="20" height="15" tilewidth="64" tileheight="32" infinite="0" nextlayerid="11" nextobjectid="14">
+<map version="1.9" tiledversion="1.9.0" orientation="isometric" renderorder="right-down" width="16" height="26" tilewidth="64" tileheight="32" infinite="0" nextlayerid="11" nextobjectid="15">
  <editorsettings>
   <export format="json"/>
  </editorsettings>
@@ -7,39 +7,43 @@
   <property name="wrap_x" type="bool" value="false"/>
   <property name="wrap_y" type="bool" value="false"/>
  </properties>
- <tileset firstgid="1" source="sync-tileset.json"/>
- <tileset firstgid="10" source="sync-tileset.tsx"/>
- <tileset firstgid="19" source="wip-tileset.tsx"/>
- <tileset firstgid="275" source="temp_entities.tsx"/>
- <layer id="4" name="Move Layer" width="20" height="15" offsetx="0" offsety="15">
+ <tileset firstgid="1" source="wip-tileset.tsx"/>
+ <tileset firstgid="257" source="temp_entities.tsx"/>
+ <layer id="4" name="Move Layer" width="16" height="26" offsetx="0" offsety="15">
   <data encoding="base64" compression="zlib">
-   eJxjYWBgYAFiTiTMQgGmVP8oHsWjeBTjwgBmsQTF
+   eJxjYGBgOEoBZoDS9WTgwa5/IxTj4tNa/0h3/2DXv2WI6x/u6Weou58U/ZSU3wMJAG8ozOI=
   </data>
  </layer>
- <layer id="1" name="Block Layer" width="20" height="15">
+ <layer id="1" name="Block Layer" width="16" height="26">
   <data encoding="base64" compression="zlib">
-   eJzLZ2BgyKcyphYYNW/UvFHzhr551MQAVCkcnw==
+   eJxjYGBgiKUAMyDRpIJR/aP6h7J+dHOGmv6BDr9R/dTTT0n5PZAAANlqGcw=
   </data>
  </layer>
  <objectgroup id="5" name="Object Layer 1" offsetx="0" offsety="4">
-  <object id="3" name="Casino Inside Door" type="Door" gid="275" x="608" y="256" width="64" height="64">
+  <object id="3" name="Casino Inside Door" class="Door" gid="257" x="478.5" y="447.5" width="64" height="64">
    <properties>
     <property name="dest_door" value="Casino Outside Door"/>
     <property name="dest_map" value="0"/>
    </properties>
   </object>
-  <object id="4" gid="277" x="466.25" y="301.75" width="64" height="64"/>
-  <object id="5" gid="277" x="474" y="125" width="64" height="64"/>
-  <object id="6" name="Slots6" type="SlotMachine" gid="278" x="260.25" y="133.75" width="64" height="64"/>
-  <object id="7" name="Slots5" type="SlotMachine" gid="278" x="280.5" y="226.5" width="64" height="64"/>
-  <object id="8" name="Slots4" type="SlotMachine" gid="278" x="299.5" y="335.5" width="64" height="64"/>
-  <object id="9" name="Slots3" type="SlotMachine" gid="278" x="125.5" y="129.5" width="64" height="64"/>
-  <object id="10" name="Slots2" type="SlotMachine" gid="278" x="149" y="226" width="64" height="64"/>
-  <object id="11" name="Slots1" type="SlotMachine" gid="278" x="173.5" y="338.5" width="64" height="64"/>
-  <object id="12" name="Terminal 3" type="Terminal" gid="279" x="336" y="70" width="64" height="64"/>
-  <object id="13" name="Glowing Portal C" type="GlowingPortal" gid="280" x="98.5" y="383.5" width="64" height="64">
+  <object id="4" gid="259" x="160" y="256" width="64" height="64"/>
+  <object id="5" gid="259" x="160" y="608" width="64" height="64"/>
+  <object id="6" name="Slots6" class="SlotMachine" gid="260" x="384" y="160" width="64" height="64"/>
+  <object id="7" name="Slots5" class="SlotMachine" gid="260" x="384" y="256" width="64" height="64"/>
+  <object id="8" name="Slots4" class="SlotMachine" gid="260" x="256" y="256" width="64" height="64"/>
+  <object id="9" name="Slots3" class="SlotMachine" gid="260" x="384" y="544" width="64" height="64"/>
+  <object id="10" name="Slots2" class="SlotMachine" gid="260" x="256" y="544" width="64" height="64"/>
+  <object id="11" name="Slots1" class="SlotMachine" gid="260" x="384" y="640" width="64" height="64"/>
+  <object id="12" name="Terminal 3" class="Terminal" gid="261" x="256" y="384" width="64" height="64"/>
+  <object id="13" name="Glowing Portal C" class="GlowingPortal" gid="262" x="128" y="352" width="64" height="64">
    <properties>
     <property name="ident" value=""/>
+   </properties>
+  </object>
+  <object id="14" name="Casino Inside Door" gid="257" x="477.25" y="415.75" width="64" height="64">
+   <properties>
+    <property name="dest_door" value="Casino Outside Door"/>
+    <property name="dest_map" value="0"/>
    </properties>
   </object>
  </objectgroup>

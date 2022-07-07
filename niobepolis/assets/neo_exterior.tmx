@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.8" tiledversion="1.8.4" orientation="isometric" renderorder="right-down" width="30" height="60" tilewidth="64" tileheight="32" infinite="0" nextlayerid="12" nextobjectid="28">
+<map version="1.9" tiledversion="1.9.0" orientation="isometric" renderorder="right-down" width="30" height="60" tilewidth="64" tileheight="32" infinite="0" nextlayerid="12" nextobjectid="28">
  <properties>
   <property name="wallpaper" value="wp_city.png"/>
   <property name="wrap_x" type="bool" value="false"/>
@@ -8,17 +8,14 @@
  <tileset firstgid="1" source="wip-tileset.tsx"/>
  <tileset firstgid="257" source="temp_entities.tsx"/>
  <tileset firstgid="273" source="npcs.tsx"/>
- <tileset firstgid="298" source="sync-tileset.json"/>
- <tileset firstgid="307" source="sync-tileset.tsx"/>
- <tileset firstgid="316" source="sync-tileset.tsx"/>
  <layer id="1" name="Move Layer" width="30" height="60" offsetx="0" offsety="15">
   <data encoding="base64" compression="zlib">
-   eJy9mEtOwzAQhucsKM2jTSQQXIlHeYsdlAXnYYnEjov0Iqyxpfnl6WA3TmJ7pF9u48SfZ2yPLRMts8aoN6pZd0aXRvcL241hro02XObmVsy1Gvh/VYC7EWqNVvw7N7djnvWxJxfvEuNr/bNzqeHfQ0LueqTexrdl7ioBF+0hhsOR996MHllLuJ3g2XYbcj5t1LuI7Y3RFet2JhfroiHnd83PNFfmiheijwdTWr3P4GJuYs52zB9Ymi1jq+umWEcu/9RcwlfkiRC3Uv2fYpbVklufVivmtyPcgVyuXvN3sQYe8i5ii5xk607IjYPm4h3MzVhruE3EtOU+wF/4g3Z9/qJP6INvfLR1zEAbFR2uLYyBLzcOHJdaCO11ET7je5kz4KttA3HWe1BPbmzwfR3Bk1y0i3W0ov/rWo9vT4drXu5bMXMMa7WiwzyCNSbb0OuoYi76t6FpcwxzE/2GD+iTjzu2j6Q0yUW/SnMR3xx2eoSr8/OUfDXVxH5EO1WXy3drr0bXRltycwv5pjryXax9Ge2Nvrncizo9p/tETGnfXIJ77uHmGFdwPwNc5Odc3LMAF2Ob2n64vBDPdK6cetaYYr8Bru/cmct0nGP325Rc7MG+c29O7kBuv8cZCftyLi5ypTx/5szROlfiXFXC9NzKkTu06TuVEucOnHclt0SMfXcbOfOVthJ3G7m4XUC6LhU3xIvRXO4SZmmuvMt5nsmdw051lzM3ttbXJXc5IXbouc5Rvu+WsEPPx7hL2SW5khPqTy7usb6U5kq2PN88Cu0KcO355kpoS4f+pzbbpj1XPQg90f+45+DGzO8cNsYtYSX9ncv9A9lxqVk=
+   eJztmFtOAzEMRb0W1Hl1OtthBzwKtCC+gFKJtXYlxMJXcdNJJ5NJ8oWlq7bzyImd2ElDtMwao41RLXo2ujN6WdhuCHNt1Mtnbu5KuKxBfq8KcHul1qiS77m5nfDYxw3ZeJcYX/aP51Ij34eE3PXEfY5vK9wqARftIYbDlee+jPaiJdxO8bjdhqxPvfMsYvtodC96iuQiLxqyftdyzeXqWvFO9LMzn6zvCC7mJuZsJ/xB5LJ1bE9GtxFMEg7qTy2f8BV1IoS7mcllVks2P1mV8NsALmr1Wt4LNfBQdxFb1CS+d0N2HFwunsHcDLVG2kRMW+kD/IU/aHfMX/QJfRgbH9c6YQxk57HOLYzBWG08SVxqJbTXBfg8yPu6ZsBXbgNxdtcgxFm/XwfwNBftIo8quszrsfHVOa/XrZA5hlxd0XkdQY7pNlzuSrjoX0/z5hjmMfoNH9AnHze2bsy1f661OfUq1D6MjnS2HtHB4TYZuEfRp9GD0Zb+fMZ6gpqT2uCv9hlczpmQ+hRjR/Jzc4zrFBf1OZf54pxrXGE+f7H2luaO7TtT2rU4h663Mebzl2OMfUYOv33cgex6jz0S/gOksLE4o1bq/WfqXNb+urUS+6ocpv3l+u/OrZy1A+aeqUz9f01h2O9qbq4Yaxs728hZr1wrcbaRi9t55N5LxfXxQhTLXcIszdVnOW+R3Bh2qrOc2Niyr0vOcnxs33W3Ro29t4Ttuz7FXcouydUcX39yca/1pTRXs/X+Zq90KMDl/c290pbO/U9t3Cbvq3ZKr3QZ9xzckPmdw6a4Jaykv7HcX6M5vds=
   </data>
  </layer>
  <layer id="2" name="Block Layer" width="30" height="60">
   <data encoding="base64" compression="zlib">
-   eJzt0TEOgkAQBdCx4UDa0NF5CxtOYiGNR6GlVRMaPIMtBa0lrQNZO0ETZ/aT8F/yk00g82dBxEftNPetd57/yUHTgnoRWsHctxfM/yWy0GmuwG7yh/jOQ+ctUtcl9HXh/K+TyNFgzE+KkHOsQhnvtzrpxmbO1mYMTXhoGs09nMuZd/eazGmPaubZzqnzm7X1xpKgF1iIHL0AERGZeKIXICIiiuAFBIcZ9g==
+   eJzt0z0OgzAMBWBP7YE4TxdO0gEWztQf9QIcIgNrx4w0ldIlIlVD7TyE3idZggE/x4CIjYdR3w9v3H/JKZQD5SI4wZzXC+b9EmmYQl2B2WQPsed35q1S1iXmTfE6NRf260TO/86Uyz0m932sQSPwx9xOMask1wpz6+Qi3JX+xT1oDHt/27NlrrZxxTMH9Snytvw9t+gBFG15z0RE1p7oAYiIiCp4ASJEISQ=
   </data>
  </layer>
  <objectgroup id="3" name="Object Layer" offsetx="0" offsety="4">
@@ -27,64 +24,64 @@
     <property name="test" value="Trashcan"/>
    </properties>
   </object>
-  <object id="12" name="Casino Outside Door" type="Door" gid="257" x="400" y="460" width="64" height="64">
+  <object id="12" name="Casino Outside Door" class="Door" gid="257" x="400" y="460" width="64" height="64">
    <properties>
     <property name="dest_door" value="Casino Inside Door"/>
     <property name="dest_map" type="int" value="3"/>
    </properties>
   </object>
-  <object id="27" name="Casino Outside Door" type="Door" gid="257" x="400" y="432" width="64" height="64">
+  <object id="27" name="Casino Outside Door" class="Door" gid="257" x="400" y="432" width="64" height="64">
    <properties>
     <property name="dest_door" value="Casino Inside Door"/>
     <property name="dest_map" type="int" value="3"/>
    </properties>
   </object>
-  <object id="26" name="To Small Room Door" type="Door" gid="257" x="539" y="117" width="64" height="64">
+  <object id="26" name="To Small Room Door" class="Door" gid="257" x="539" y="117" width="64" height="64">
    <properties>
     <property name="dest_door" value="Small Room Door"/>
     <property name="dest_map" type="int" value="2"/>
    </properties>
   </object>
-  <object id="14" name="Alphara" type="NPC" gid="275" x="656.667" y="264" width="32" height="32">
+  <object id="14" name="Alphara" class="NPC" gid="275" x="656.667" y="264" width="32" height="32">
    <properties>
     <property name="conversation" value="convo_jt1.json"/>
     <property name="portrait" value="portrait_woman.png"/>
    </properties>
   </object>
-  <object id="15" name="Zetus" type="NPC" gid="273" x="596.5" y="669.5" width="32" height="32">
+  <object id="15" name="Zetus" class="NPC" gid="273" x="596.5" y="669.5" width="32" height="32">
    <properties>
     <property name="conversation" value="convo_jt2.json"/>
     <property name="portrait" value="portrait_man.png"/>
    </properties>
   </object>
-  <object id="17" name="Terminal 1" type="Terminal" gid="261" x="599.5" y="884.5" width="64" height="64"/>
-  <object id="18" name="Terminal 2" type="Terminal" gid="261" x="855.5" y="492.5" width="64" height="64"/>
-  <object id="19" name="Portal1" type="GlowingPortal" gid="262" x="783.5" y="724.5" width="64" height="64">
+  <object id="17" name="Terminal 1" class="Terminal" gid="261" x="599.5" y="884.5" width="64" height="64"/>
+  <object id="18" name="Terminal 2" class="Terminal" gid="261" x="855.5" y="492.5" width="64" height="64"/>
+  <object id="19" name="Portal1" class="GlowingPortal" gid="262" x="783.5" y="724.5" width="64" height="64">
    <properties>
     <property name="ident" value=""/>
    </properties>
   </object>
-  <object id="21" name="Portal 2" type="GlowingPortal" gid="262" x="752.5" y="531.5" width="64" height="64">
+  <object id="21" name="Portal 2" class="GlowingPortal" gid="262" x="752.5" y="531.5" width="64" height="64">
    <properties>
     <property name="ident" value=""/>
    </properties>
   </object>
-  <object id="22" name="Portal3" type="GlowingPortal" gid="262" x="273.5" y="210.5" width="64" height="64">
+  <object id="22" name="Portal3" class="GlowingPortal" gid="262" x="273.5" y="210.5" width="64" height="64">
    <properties>
     <property name="ident" value=""/>
    </properties>
   </object>
-  <object id="23" name="Portal4" type="GlowingPortal" gid="262" x="714.5" y="949.5" width="64" height="64">
+  <object id="23" name="Portal4" class="GlowingPortal" gid="262" x="714.5" y="949.5" width="64" height="64">
    <properties>
     <property name="ident" value=""/>
    </properties>
   </object>
-  <object id="24" name="Portal5" type="GlowingPortal" gid="262" x="752.5" y="1171.5" width="64" height="64">
+  <object id="24" name="Portal5" class="GlowingPortal" gid="262" x="752.5" y="1171.5" width="64" height="64">
    <properties>
     <property name="ident" value=""/>
    </properties>
   </object>
-  <object id="25" name="Portal6" type="GlowingPortal" gid="262" x="445" y="1463" width="64" height="64">
+  <object id="25" name="Portal6" class="GlowingPortal" gid="262" x="445" y="1463" width="64" height="64">
    <properties>
     <property name="ident" value=""/>
    </properties>
@@ -92,17 +89,17 @@
  </objectgroup>
  <layer id="5" name="Tile Layer 3" width="30" height="60" offsetx="0" offsety="-15">
   <data encoding="base64" compression="zlib">
-   eJzt0KENgDAUhOEyD4ZxMBhGYDSCBPZAk1R3BF7CE0gE7QX4v+TSurs2BNzVWXZBb10JSsP5VsV7gTeLlkXYjXxaP0v+87VzLdQ5e1/0O5BLox7wcaNlswyWSbwF+JNePQAA8IikHgAAQAEHG/sQbQ==
+   eJzt0DEOgCAQRNHtvKKNjSfxYGL2LiTU3kApKCwtYJfAfwmBboYRwV9bPtG7hKEoc/0XqCHlExyz0c5absudv5mXUeZZ8lJ5924ZMPchd+hcLypyeHeYgbKzCe145927QEXa8c4A0NrtXQAAAAMv4rAWhg==
   </data>
  </layer>
  <layer id="4" name="Tile Layer 4" width="30" height="60" offsetx="0" offsety="-31">
   <data encoding="base64" compression="zlib">
-   eJzt16ENgDAQhtFuhgDDEGxaGKaCCRgABIIgCIZeSN9Lfv2dvZR4azpWArrl3BbUBZ6Nt81B3T6o2zXWHYK6S6VuvjRzpSbwjTX6AGiQ/wkAAPiLHXTUEuY=
+   eJzt17EJgDAQheHbzEIbh3AXB4tys2QGB9AihViIIN4L5v/g1X+4LmZ4ajqWBd1ctom6AO6Nly2ibi/qdo11B1F3DeqmUzMFNQF8z81m9Rta4Nw5hFd85z/9n7ziOwMAAAB4bwcvzBcA
   </data>
  </layer>
  <layer id="7" name="Tile Layer 5" width="30" height="60" offsetx="0" offsety="-47">
   <data encoding="base64" compression="zlib">
-   eJztzTsKgDAQQMFcSaz8nCMYwftfw7VLaZVFmYFXv1J4a4vWhO8cTQnfPVoSvvA1V9eZ9K2+v/4eA7+PlvAEAAAAAMa5AUGaCpQ=
+   eJzt08sJgDAQRdG0JK78lCGigk3agvt04MZKHHdBNEQxGZR74K0vTIgxCFXJSoVuLssUurWsUOgCXzM6G5S6Ld1fd7uE3V2v0AQQTyNb6d5iL7Z4Nr3Y9XXmw+g+7/reN2XXbcfohji7vcb/BQAAAJDOBkXxXLg=
   </data>
  </layer>
  <layer id="8" name="Tile Layer 6" width="30" height="60" offsetx="0" offsety="-63">

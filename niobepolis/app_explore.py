@@ -38,12 +38,20 @@ IsoCursor.new_coord_system = False
 
 def _load_maps():
     global maps, tilemap_width, tilemap_height
+    # kengi.isometric.set_tiled_version('1.8')  # legacy, so iso objects use "type" attribute key
+
     maps = [
         IsoMap.load(['assets', ], main_map_path, entities.OBJECT_CLASSES),
-        IsoMap.load(['assets', ], 'test_map0.tmx', entities.OBJECT_CLASSES),
+        None, #IsoMap.load(['assets', ], 'test_map0.tmx', entities.OBJECT_CLASSES),
         IsoMap.load(['assets', ], 'small_map.tmx', entities.OBJECT_CLASSES),
+
         IsoMap.load(['assets', ], 'casino.tmx', entities.OBJECT_CLASSES)
     ]
+
+    #kengi.isometric.model.IsometricLayer.flag_csv = True
+    #maps.append(
+    #    IsoMap.load(['assets', ], 'casino.tmj', entities.OBJECT_CLASSES)
+    #)
     tilemap_width, tilemap_height = maps[0].width, maps[0].height
 
 
@@ -59,7 +67,8 @@ def _init_specific_stuff(refscr):
     # - add map entities
     mypc = entities.Character(10, 10)
     for tm in maps:
-        list(tm.objectgroups.values())[0].contents.append(mypc)
+        if tm:
+            list(tm.objectgroups.values())[0].contents.append(mypc)
 
     map_viewer.set_focused_object(mypc)
     # force: center on avatar op.
@@ -163,11 +172,12 @@ class BasicCtrl(kengi.event.EventReceiver):
                     # abort
                     self.pev(MyEvTypes.ConvEnds)
 
-            elif event.key == pygame.K_TAB and current_tilemap in (0, 1):
-                current_tilemap = 1 - current_tilemap
-                map_viewer.switch_map(maps[current_tilemap])
-                mypc.x = 10
-                mypc.y = 10
+            # elif event.key == pygame.K_TAB and current_tilemap in (0, 1):
+            #     current_tilemap = 1 - current_tilemap
+            #     map_viewer.switch_map(maps[current_tilemap])
+            #     mypc.x = 10
+            #     mypc.y = 10
+
             elif event.key == pygame.K_F1:
                 print(map_viewer.cursor.get_pos())
 
