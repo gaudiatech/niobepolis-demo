@@ -17,7 +17,7 @@ class Character(kengi.isometric.model.IsometricMapObject):
         self.x = x
         self.y = y
         self.name = "PC"
-        self.surf = pygame.image.load("assets/sys_icon.png").convert_alpha()
+        self.surf = pygame.image.load("assets/avatar.png").convert_alpha()
 
     def __call__(self, dest_surface, sx, sy, mymap):
         mydest = self.surf.get_rect(midbottom=(sx, sy))

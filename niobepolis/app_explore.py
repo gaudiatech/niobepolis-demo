@@ -20,7 +20,6 @@ IsoCursor = kengi.isometric.extras.IsometricMapQuarterCursor
 IsoMap = kengi.isometric.model.IsometricMap
 
 # global variables
-main_map_path = 'neo_exterior.tmx'
 conv_viewer = None
 conversation_ongoing = False
 current_path = None
@@ -38,20 +37,17 @@ IsoCursor.new_coord_system = False
 
 def _load_maps():
     global maps, tilemap_width, tilemap_height
-    # kengi.isometric.set_tiled_version('1.8')  # legacy, so iso objects use "type" attribute key
+    # could use the legacy mode, so map iso objects
+    # use "type" attribute key instead of "class"
+    # kengi.isometric.set_tiled_version('1.8')
 
+    kengi.isometric.model.IsometricLayer.flag_csv = True
     maps = [
-        IsoMap.load(['assets', ], main_map_path, entities.OBJECT_CLASSES),
-        None, #IsoMap.load(['assets', ], 'test_map0.tmx', entities.OBJECT_CLASSES),
-        IsoMap.load(['assets', ], 'small_map.tmx', entities.OBJECT_CLASSES),
-
-        IsoMap.load(['assets', ], 'casino.tmx', entities.OBJECT_CLASSES)
+        IsoMap.load(['assets', ], 'city.tmj', entities.OBJECT_CLASSES),
+        None,
+        IsoMap.load(['assets', ], 'small_map.tmj', entities.OBJECT_CLASSES),
+        IsoMap.load(['assets', ], 'casino.tmj', entities.OBJECT_CLASSES)
     ]
-
-    #kengi.isometric.model.IsometricLayer.flag_csv = True
-    #maps.append(
-    #    IsoMap.load(['assets', ], 'casino.tmj', entities.OBJECT_CLASSES)
-    #)
     tilemap_width, tilemap_height = maps[0].width, maps[0].height
 
 

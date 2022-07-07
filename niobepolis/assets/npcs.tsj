@@ -1,0 +1,15 @@
+{ "columns":5,
+ "image":"npcs.png",
+ "imageheight":160,
+ "imagewidth":160,
+ "margin":0,
+ "name":"npcs",
+ "spacing":0,
+ "tilecount":25,
+ "tiledversion":"1.9.0",
+ "tileheight":32,
+ "tilewidth":32,
+ "transparentcolor":"#ff00ff",
+ "type":"tileset",
+ "version":"1.8"
+}
