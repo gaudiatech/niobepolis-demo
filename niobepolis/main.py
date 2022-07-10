@@ -11,7 +11,7 @@ if __name__ == '__main__':
     # uncomment the following line to test niobe with a new map
     # app_explore.main_map_path = 'bug_exterior.tmx'
 
-    kengi.init('old_school', maxfps=MAXFPS)
+    kengi.init(2, maxfps=MAXFPS)
     kengi.declare_states(  # so we can use pushstate/changestate operations
         GameStates,
         {

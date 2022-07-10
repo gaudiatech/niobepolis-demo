@@ -248,8 +248,7 @@ class ExploreState(BaseGameState):
         self.v.turn_off()
 
     def resume(self):
-        kengi.screen_param('old_school')
-
+        kengi.screen_param(2)
         self.v.screen = kengi.get_surface()  # manually update the ref on vscreen
 
         self.v.turn_on()

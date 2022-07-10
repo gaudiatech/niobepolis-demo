@@ -350,7 +350,7 @@ class UthModel(kengi.event.CogObj):
 # -----------------------------------------------------------------/
 #              ******** VIEW ********
 # -----------------------------------------------------------------/
-BACKGROUND_IMG_PATH = 'assets/pokerbackground.png'
+BACKGROUND_IMG_PATH = 'assets/pokerbackground1.png'
 CARD_SIZE_PX = (69, 101) #(82, 120)
 CHIP_SIZE_PX = (40, 40) #(62, 62)
 POS_CASH = (1192/2, 1007/2)
@@ -682,7 +682,7 @@ class PokerState(BaseGameState):
         self.m = self.v = self.c = None
 
     def enter(self):
-        kengi.screen_param('hd')
+        kengi.screen_param(1)
         self.m = UthModel()
         self.v = UthView(self.m)
         self.v.turn_on()
