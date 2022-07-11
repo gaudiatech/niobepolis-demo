@@ -1,17 +1,16 @@
 import math
 import re
 import time
-
-# import katagames_sdk as katasdk
-# katasdk.bootstrap()
+import json
+#import katagames_sdk as katasdk
+#katasdk.bootstrap()
 import katagames_engine as kengi
-
-
+#kengi = katasdk.kengi
 kengi.bootstrap_e()
 
 DEBUG = False
 MAXFPS = 45
-# kengi = katasdk.kengi
+
 
 
 GameStates = kengi.struct.enum(
@@ -40,10 +39,13 @@ MyEvTypes = kengi.event.enum_ev_types(
     'Defeat'  # contains: loss
 )
 
+
 # - aliases
 pygame = kengi.pygame
 evmodule = kengi.event
 CgmEvent = kengi.event.CgmEvent
+CogObject = kengi.event.CogObj
+IsoMapObject = kengi.isometric.model.IsometricMapObject
 ReceiverObj = kengi.event.EventReceiver
 EngineEvTypes = kengi.event.EngineEvTypes
 BaseGameState = kengi.BaseGameState
@@ -66,7 +68,7 @@ current_path = None
 current_tilemap = 0
 maps = list()
 map_viewer = None
-mypc = None
+isomap_player_entity = None
 path_ctrl = None
 screen = None
 tilemap_height = tilemap_width = 0
@@ -97,6 +99,12 @@ class GlVarsMockup:
         self.keep_going = True  # if the game continues, or not
         self.cached_gamelist = None
         self.ref_vmstate = None
+        self.assoc_portal_game = {}
+
+    def set_portals(self, ref_li):
+        self.assoc_portal_game.clear()
+        for portal_id, cart_name in ref_li:
+            self.assoc_portal_game[portal_id] = cart_name
 
 
 glvars = GlVarsMockup()
@@ -120,7 +128,7 @@ def _load_maps():
 
 
 def _init_specific_stuff(refscr):
-    global map_viewer, maps, mypc
+    global map_viewer, maps, isomap_player_entity
 
     _load_maps()
     map_viewer = kengi.isometric.IsometricMapViewer(
@@ -129,14 +137,24 @@ def _init_specific_stuff(refscr):
         left_scroll_key=pygame.K_LEFT, right_scroll_key=pygame.K_RIGHT
     )
     # - add map entities
-    mypc = Character(10, 10)
+    if glvars.ref_vmstate and glvars.ref_vmstate.landing_spot is not None:
+        landing_loc = glvars.ref_vmstate.landing_spot
+    else:
+        landing_loc = [0, 16, 14]  # default location
+
+    isomap_player_entity = Character(landing_loc[1], landing_loc[2])
+
     for tm in maps:
         if tm is not None:
-            list(tm.objectgroups.values())[0].contents.append(mypc)
-
-    map_viewer.set_focused_object(mypc)
+            list(tm.objectgroups.values())[0].contents.append(isomap_player_entity)
+    map_viewer.set_focused_object(isomap_player_entity)
     # force: center on avatar op.
-    mypc.x += 0.5
+    isomap_player_entity.x += 0.5
+
+    # tp to another map if its required
+    landing_map = landing_loc[0]
+    if landing_map != 0:
+        map_viewer.switch_map(maps[landing_map])
 
     # the rest
     cursor_image = pygame.image.load("assets/half-floor-tile.png")
@@ -160,7 +178,8 @@ class Character(kengi.isometric.model.IsometricMapObject):
         dest_surface.blit(self.surf, mydest)
 
 
-class Door(kengi.isometric.model.IsometricMapObject):
+class Door(IsoMapObject):
+
     def bump(self):
         # Call this method when the PC bumps into this portal.
         if "dest_map" in self.properties:
@@ -173,19 +192,25 @@ class Door(kengi.isometric.model.IsometricMapObject):
 
 
 class GlowingPortal(Door):
-    def __init__(self, *kwargs):
-        super().__init__(*kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.emitter = CogObject()
 
         self.surf = pygame.image.load("assets/portalRings2.png").convert_alpha()
         self.frame = 0
 
-    def _get_ident(self):
+    @property
+    def ident(self):
         return self.properties.get("ident")
 
-    def _set_ident(self, new_value):
+    @ident.setter
+    def ident(self, new_value):
         self.properties["ident"] = new_value
 
-    ident = property(_get_ident, _set_ident)
+    @property
+    def landing_cell(self):
+        if 'landing_cell' in self.properties:  # its optionnal
+            return json.loads(self.properties['landing_cell'])
 
     def __call__(self, dest_surface, sx, sy, mymap):
         mydest = pygame.Rect(0, 0, 32, 32)
@@ -195,9 +220,12 @@ class GlowingPortal(Door):
 
     def bump(self):
         # let us use the event manager, so we achieve low-coupling
-        evmodule.EventManager.instance().post(
-            CgmEvent(MyEvTypes.PortalActivates, portal_id=self.ident)
-        )
+        # evmodule.EventManager.instance().post(
+        #     CgmEvent(MyEvTypes.PortalActivates, portal_id=self.ident)
+        # )
+
+        self.emitter.pev(MyEvTypes.PortalActivates, portal_id=self.ident, portal_lcell=self.landing_cell)
+        print('portal activates ', self.ident)
 
 
 class NPC(kengi.isometric.model.IsometricMapObject):
@@ -698,7 +726,7 @@ class MovementPath:
 # --------------------------------------------
 class BasicCtrl(kengi.event.EventReceiver):
     def proc_event(self, event, source):
-        global map_viewer, mypc, current_tilemap, current_path, conv_viewer, conversation_ongoing
+        global map_viewer, isomap_player_entity, current_tilemap, current_path, conv_viewer, conversation_ongoing
 
         if event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONUP):
             if conversation_ongoing:
@@ -711,7 +739,7 @@ class BasicCtrl(kengi.event.EventReceiver):
                     # TODO: There are some glitches in the movement system, when the player character will not move to
                     # a tile that has been clicked. It generally happens with tiles that are adjacent to the PC's
                     # current position, but it doesn't happen all the time. I will look into this later.
-                    current_path = MovementPath(mypc, map_viewer.cursor.get_pos(), maps[current_tilemap])
+                    current_path = MovementPath(isomap_player_entity, map_viewer.cursor.get_pos(), maps[current_tilemap])
                     if DEBUG:
                         print('movement path has been set')
 
@@ -724,8 +752,8 @@ class BasicCtrl(kengi.event.EventReceiver):
             elif event.key == pygame.K_TAB and current_tilemap in (0, 1):
                 current_tilemap = 1 - current_tilemap
                 map_viewer.switch_map(maps[current_tilemap])
-                mypc.x = 10
-                mypc.y = 10
+                isomap_player_entity.x = 10
+                isomap_player_entity.y = 10
             elif event.key == pygame.K_F1:
                 print(map_viewer.cursor.get_pos())
 
@@ -734,9 +762,17 @@ class BasicCtrl(kengi.event.EventReceiver):
                 current_path = None
                 current_tilemap = event.new_map
                 new_gate = maps[current_tilemap].get_object_by_name(event.gate_name)
-                mypc.x = new_gate.x + 0.5
-                mypc.y = new_gate.y + 0.5
+                isomap_player_entity.x = new_gate.x + 0.5
+                isomap_player_entity.y = new_gate.y + 0.5
                 map_viewer.switch_map(maps[current_tilemap])
+
+        elif event.type == MyEvTypes.PortalActivates:
+            if event.portal_id in glvars.assoc_portal_game:
+                dest_game = glvars.assoc_portal_game[event.portal_id]
+                # save data
+                glvars.interruption = [2, dest_game]
+                print('lcell -> ', event.portal_lcell)
+                glvars.ref_vmstate.landing_spot = event.portal_lcell
 
         elif event.type == EngineEvTypes.CONVSTARTS:
             conversation_ongoing = True
@@ -1471,6 +1507,14 @@ class PokerState(BaseGameState):
 
 def game_enter(vmstate):
     global mger, scr, paint_event, lu_event
+
+    # bind vmstate to glvars, update glvars accordingly
+    if vmstate:
+        glvars.ref_vmstate = vmstate
+        glvars.cached_gamelist = vmstate.gamelist_func()
+        glvars.ref_vmstate = vmstate
+        glvars.set_portals(vmstate.portals_func())
+
     kengi.init(3, caption='niobepolis - unstable')
     mger = kengi.event.EventManager.instance()  # works only after a .init(...) operation
     scr = kengi.get_surface()
@@ -1487,11 +1531,7 @@ def game_enter(vmstate):
     kengi.get_game_ctrl().turn_on()
     kengi.get_game_ctrl().init_state0()
 
-    # fetch gamelist
-    glvars.cached_gamelist = []  # vmstate.gamelist_func()
-    glvars.ref_vmstate = vmstate
-
-    # debug poker -
+    # in case you need to debug poker:
     # mger.post(CgmEvent( MyEvTypes.SlotMachineStarts))
 
 

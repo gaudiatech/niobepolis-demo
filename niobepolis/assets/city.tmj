@@ -319,6 +319,11 @@
                          "name":"ident",
                          "type":"string",
                          "value":"1"
+                        }, 
+                        {
+                         "name":"landing_cell",
+                         "type":"string",
+                         "value":"[0,24,23]"
                         }],
                  "rotation":0,
                  "visible":true,
@@ -337,6 +342,11 @@
                          "name":"ident",
                          "type":"string",
                          "value":"2"
+                        }, 
+                        {
+                         "name":"landing_cell",
+                         "type":"string",
+                         "value":"[0,24,17]"
                         }],
                  "rotation":0,
                  "visible":true,
@@ -355,6 +365,11 @@
                          "name":"ident",
                          "type":"string",
                          "value":"3"
+                        }, 
+                        {
+                         "name":"landing_cell",
+                         "type":"string",
+                         "value":"[0,9,7]"
                         }],
                  "rotation":0,
                  "visible":true,

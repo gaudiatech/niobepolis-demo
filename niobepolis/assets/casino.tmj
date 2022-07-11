@@ -232,12 +232,17 @@
                          "name":"ident",
                          "type":"string",
                          "value":"7"
+                        }, 
+                        {
+                         "name":"landing_cell",
+                         "type":"string",
+                         "value":"[3, 3.5, 11]"
                         }],
                  "rotation":0,
                  "visible":true,
                  "width":64,
-                 "x":128,
-                 "y":352
+                 "x":99.3333333333333,
+                 "y":323.333333333333
                 }, 
                 {
                  "class":"",
@@ -263,7 +268,7 @@
                  "y":415.75
                 }],
          "offsetx":0,
-         "offsety":4,
+         "offsety":1,
          "opacity":1,
          "type":"objectgroup",
          "visible":true,
