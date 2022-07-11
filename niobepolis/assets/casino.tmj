@@ -226,12 +226,12 @@
                  "gid":262,
                  "height":64,
                  "id":13,
-                 "name":"Glowing Portal C",
+                 "name":"Glowing Portal7",
                  "properties":[
                         {
                          "name":"ident",
                          "type":"string",
-                         "value":""
+                         "value":"7"
                         }],
                  "rotation":0,
                  "visible":true,
