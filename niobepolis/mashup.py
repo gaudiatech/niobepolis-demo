@@ -192,12 +192,20 @@ class Door(IsoMapObject):
 
 
 class GlowingPortal(Door):
+    PORTAL_SPR_SHEET = None
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.emitter = CogObject()
 
-        self.surf = pygame.image.load("assets/portalRings2.png").convert_alpha()
-        self.frame = 0
+        # we can do it this way, but its very non-optimized in web ctx:
+        # self.surf = pygame.image.load("assets/portalRings2.png").convert_alpha()
+
+        # alternative:
+        if self.__class__.PORTAL_SPR_SHEET is None:
+            self.__class__.PORTAL_SPR_SHEET = kengi.gfx.Spritesheet("assets/portalRings2.png")
+            self.__class__.PORTAL_SPR_SHEET.set_tilesize((32, 32))
+        self.frame = -1
 
     @property
     def ident(self):
@@ -213,10 +221,18 @@ class GlowingPortal(Door):
             return json.loads(self.properties['landing_cell'])
 
     def __call__(self, dest_surface, sx, sy, mymap):
-        mydest = pygame.Rect(0, 0, 32, 32)
-        mydest.midbottom = (sx, sy)
-        dest_surface.blit(self.surf, mydest, pygame.Rect(self.frame * 32, 0, 32, 32))
-        self.frame = (self.frame + 1) % 5
+        # we can do it this way, but its very non-optimized in web ctx
+        # mydest = pygame.Rect(0, 0, 32, 32)
+        # mydest.midbottom = (sx, sy)
+        # dest_surface.blit(self.surf, mydest, pygame.Rect(self.frame * 32, 0, 32, 32))
+        # self.frame = (self.frame + 1) % 5
+
+        # alternative:
+        self.frame = (self.frame + 1) % self.PORTAL_SPR_SHEET.card
+        dest_surface.blit(
+            self.PORTAL_SPR_SHEET[self.frame],
+            (sx-16, sy-32)  # anchor=midbottom -> it was manually computed
+        )
 
     def bump(self):
         # let us use the event manager, so we achieve low-coupling
@@ -608,7 +624,6 @@ class ExtraGuiLayerCtrl(ReceiverObj):
         self.mode = 'legacy'  # you can set this var to 'modern' to use Terminal events instead of F1 to open
 
     def proc_event(self, ev, source=None):
-        global MONMODE
         self.console.process_input([ev, ])  # ne sais pas cmt gerer ca autrement
 
         if ev.type == pygame.KEYDOWN:
@@ -618,7 +633,6 @@ class ExtraGuiLayerCtrl(ReceiverObj):
                     self.console.desactivate()
             elif ev.key == pygame.K_F4:
                 game_exit(None)
-                MONMODE = 'old_school'
                 game_enter(glvars.ref_vmstate)
                 # kengi.screen_param('hd')
                 # newscr = kengi.get_surface()
@@ -748,6 +762,10 @@ class BasicCtrl(kengi.event.EventReceiver):
                 if conversation_ongoing:
                     # abort
                     self.pev(EngineEvTypes.CONVENDS)
+
+            elif event.key == pygame.K_F2:
+                print('sig start term! its debug mode')
+                self.pev(MyEvTypes.TerminalStarts)
 
             elif event.key == pygame.K_TAB and current_tilemap in (0, 1):
                 current_tilemap = 1 - current_tilemap
