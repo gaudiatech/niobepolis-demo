@@ -137,7 +137,7 @@ def _init_specific_stuff(refscr):
         left_scroll_key=pygame.K_LEFT, right_scroll_key=pygame.K_RIGHT
     )
     # - add map entities
-    if glvars.ref_vmstate and glvars.ref_vmstate.landing_spot is not None:
+    if (glvars.ref_vmstate is not None) and glvars.ref_vmstate.landing_spot is not None:
         landing_loc = glvars.ref_vmstate.landing_spot
     else:
         landing_loc = [0, 16, 14]  # default location
@@ -152,9 +152,8 @@ def _init_specific_stuff(refscr):
     isomap_player_entity.x += 0.5
 
     # tp to another map if its required
-    landing_map = landing_loc[0]
-    if landing_map != 0:
-        map_viewer.switch_map(maps[landing_map])
+    if landing_loc[0] != 0:
+        manually_move_player(*landing_loc)
 
     # the rest
     cursor_image = pygame.image.load("assets/half-floor-tile.png")
@@ -269,6 +268,14 @@ class SlotMachine(kengi.isometric.model.IsometricMapObject):
         evmodule.EventManager.instance().post(
             CgmEvent(MyEvTypes.SlotMachineStarts)
         )
+
+
+def manually_move_player(new_map, new_posx, new_posy):
+    global current_path, current_tilemap, isomap_player_entity, map_viewer
+    current_path = None
+    current_tilemap = new_map
+    isomap_player_entity.x, isomap_player_entity.y = new_posx + 0.5, new_posy + 0.5
+    map_viewer.switch_map(maps[current_tilemap])
 
 
 OBJECT_CLASSES = {
@@ -777,12 +784,9 @@ class BasicCtrl(kengi.event.EventReceiver):
 
         elif event.type == MyEvTypes.MapChanges:
             if hasattr(event, 'new_map'):
-                current_path = None
-                current_tilemap = event.new_map
-                new_gate = maps[current_tilemap].get_object_by_name(event.gate_name)
-                isomap_player_entity.x = new_gate.x + 0.5
-                isomap_player_entity.y = new_gate.y + 0.5
-                map_viewer.switch_map(maps[current_tilemap])
+                print(event.gate_name)
+                new_gate = maps[event.new_map].get_object_by_name(event.gate_name)
+                manually_move_player(event.new_map, new_gate.x, new_gate.y)
 
         elif event.type == MyEvTypes.PortalActivates:
             if event.portal_id in glvars.assoc_portal_game:
@@ -1533,6 +1537,10 @@ def game_enter(vmstate):
         glvars.ref_vmstate = vmstate
         glvars.set_portals(vmstate.portals_func())
 
+    # ---------------- DEEP HACK (by Tom)---------------
+    #if katasdk.runs_in_web():
+    #    katasdk.kengi.pygame.bridge.jsbackend_cls.set_crt_filter(True)
+    # --
     kengi.init(3, caption='niobepolis - unstable')
     mger = kengi.event.EventManager.instance()  # works only after a .init(...) operation
     scr = kengi.get_surface()
