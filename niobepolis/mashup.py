@@ -9,7 +9,7 @@ import katagames_engine as kengi
 kengi.bootstrap_e()
 
 DEBUG = False
-MAXFPS = 45
+MAX_FPS = 75
 
 
 
@@ -616,10 +616,20 @@ class ExtraLayerView(ReceiverObj):
     def __init__(self, cons):
         super().__init__()
         self.console = cons
+        self.img_fps = None
+        self.ft = None
 
     def proc_event(self, ev, source=None):
-        if ev.type == EngineEvTypes.PAINT:
+        global clock
+        if ev.type == EngineEvTypes.LOGICUPDATE:
+            if not self.ft:
+                self.ft = pygame.font.Font(None, 17)
+            self.img_fps = self.ft.render(" {:.2f}fps ".format(clock.get_fps()), 1, (0, 0, 0), (250, 244, 244))
+
+        elif ev.type == EngineEvTypes.PAINT:
             self.console.draw()  # console draw
+            if self.img_fps:
+                ev.screen.blit(self.img_fps, (4, 4))
 
 
 class ExtraGuiLayerCtrl(ReceiverObj):
@@ -1574,7 +1584,7 @@ def game_update(infot=None):
         print('game_update returns ', glvars.interruption)
         return glvars.interruption
     kengi.flip()
-    clock.tick(45)
+    clock.tick(MAX_FPS)
 
 
 def game_exit(vmstate):
