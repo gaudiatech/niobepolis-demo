@@ -1,6 +1,6 @@
 import math
 import re
-import time
+# import time
 import json
 #import katagames_sdk as katasdk
 #katasdk.bootstrap()
@@ -9,7 +9,7 @@ import katagames_engine as kengi
 kengi.bootstrap_e()
 
 DEBUG = False
-MAX_FPS = 75
+MAX_FPS = 150
 
 
 
@@ -136,11 +136,13 @@ def _init_specific_stuff(refscr):
         up_scroll_key=pygame.K_UP, down_scroll_key=pygame.K_DOWN,
         left_scroll_key=pygame.K_LEFT, right_scroll_key=pygame.K_RIGHT
     )
+    map_viewer.block_wallpaper = True
+
     # - add map entities
     if (glvars.ref_vmstate is not None) and glvars.ref_vmstate.landing_spot is not None:
         landing_loc = glvars.ref_vmstate.landing_spot
     else:
-        landing_loc = [0, 16, 14]  # default location
+        landing_loc = [0, 18.0, 12.5]  # default location
 
     isomap_player_entity = Character(landing_loc[1], landing_loc[2])
 
@@ -1551,7 +1553,8 @@ def game_enter(vmstate):
     #if katasdk.runs_in_web():
     #    katasdk.kengi.pygame.bridge.jsbackend_cls.set_crt_filter(True)
     # --
-    kengi.init(3, caption='niobepolis - unstable')
+    kengi.init(1, caption='niobepolis - unstable')
+
     mger = kengi.event.EventManager.instance()  # works only after a .init(...) operation
     scr = kengi.get_surface()
     lu_event = CgmEvent(EngineEvTypes.LOGICUPDATE, curr_t=None)
@@ -1596,5 +1599,5 @@ if __name__ == '__main__':
     game_enter(None)
     ret = None
     while (ret is None) or ret[0] != 1:
-        ret = game_update(time.time())
+        ret = game_update()
     game_exit(None)
