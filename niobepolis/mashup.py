@@ -136,7 +136,8 @@ def _init_specific_stuff(refscr):
         up_scroll_key=pygame.K_UP, down_scroll_key=pygame.K_DOWN,
         left_scroll_key=pygame.K_LEFT, right_scroll_key=pygame.K_RIGHT
     )
-    map_viewer.block_wallpaper = True
+    # map_viewer.block_wallpaper = True
+    # map_viewer.animated_wallpaper = True
 
     # - add map entities
     if (glvars.ref_vmstate is not None) and glvars.ref_vmstate.landing_spot is not None:
@@ -205,7 +206,7 @@ class GlowingPortal(Door):
         # alternative:
         if self.__class__.PORTAL_SPR_SHEET is None:
             self.__class__.PORTAL_SPR_SHEET = kengi.gfx.Spritesheet("assets/portalRings2.png")
-            self.__class__.PORTAL_SPR_SHEET.set_tilesize((32, 32))
+            self.__class__.PORTAL_SPR_SHEET.tilesize = (32, 32)
         self.frame = -1
 
     @property
