@@ -1,6 +1,6 @@
 import math
 import re
-# import time
+import time
 import json
 #import katagames_sdk as katasdk
 #katasdk.bootstrap()
@@ -9,7 +9,7 @@ import katagames_engine as kengi
 kengi.bootstrap_e()
 
 DEBUG = False
-MAX_FPS = 150
+MAX_FPS = 133
 
 
 
@@ -136,14 +136,11 @@ def _init_specific_stuff(refscr):
         up_scroll_key=pygame.K_UP, down_scroll_key=pygame.K_DOWN,
         left_scroll_key=pygame.K_LEFT, right_scroll_key=pygame.K_RIGHT
     )
-    # map_viewer.block_wallpaper = True
-    # map_viewer.animated_wallpaper = True
-
     # - add map entities
-    if (glvars.ref_vmstate is not None) and glvars.ref_vmstate.landing_spot is not None:
+    if glvars.ref_vmstate and glvars.ref_vmstate.landing_spot is not None:
         landing_loc = glvars.ref_vmstate.landing_spot
     else:
-        landing_loc = [0, 18.0, 12.5]  # default location
+        landing_loc = [0, 16, 14]  # default location
 
     isomap_player_entity = Character(landing_loc[1], landing_loc[2])
 
@@ -313,11 +310,10 @@ WARP_BACK = [2, 'editor']
 re_function = re.compile(r'(?P<name>\S+)(?P<params>[\(].*[\)])')
 
 
-def build_console(screen):
-    global ingame_console
-    screensize = screen.get_size()
-    ingame_console = kengi.console.CustomConsole(
-        screen,
+def build_console(objscreen):
+    screensize = objscreen.get_size()
+    res = kengi.console.CustomConsole(
+        objscreen,
         (0, 0, screensize[0], int(0.9 * screensize[1])),  # takes up 90% of the scr height
         functions=listing_all_console_func,
         key_calls={},
@@ -326,8 +322,8 @@ def build_console(screen):
         fontobj=pygame.font.Font(None, 22)
         # kengi.gui.ImgBasedFont('assets/gibson1_font.png', CON_FONT_COLOR)  # new ft system
     )
-    ingame_console.set_motd('-Niobe Polis CONSOLE rdy-\n type "help" if needed')
-
+    res.set_motd('-Niobe Polis CONSOLE rdy-\n type "help" if needed')
+    return res
 
 # --------- ignore this code, its just to un-break things
 # after removing the dependency to KataSDK
@@ -583,36 +579,13 @@ listing_all_console_func = {  # IMPORTANT REMINDER!!
 
 def webctx():
     return False
-    # katasdk.runs_in_web()
+    #return katasdk.runs_in_web()
 
 
 if not webctx():
     listing_all_console_func["halt"] = dohalt
 else:
     listing_all_console_func["stellar"] = stellar_console_func
-
-
-# --------------- implem of console functions, docstrings are used for help ------------------END
-
-# - charge tuiles syndicate, exploite un mapping code <> surface contenant tile image -
-# we need to do it in a stupid way,
-# due to how the ROM pseudo-compil works (=>detects raw strings for filepaths, moves assets)
-# code2filename = {
-#     35: PALIAS['t035'],
-#     92: PALIAS['t092'],
-#     160: PALIAS['t160'],
-#     182: PALIAS['t182'],
-#     183: PALIAS['t183'],
-#     198: PALIAS['t198'],
-#     203: PALIAS['t203'],
-# }
-# code2tile_map = dict()
-# def _loadstuff():
-#     for code, fn in code2filename.items():
-#         code2tile_map[code] = pygame.image.load(fn)
-#
-#     for obj in code2tile_map.values():
-#         obj.set_colorkey('#ff00ff')
 
 
 class ExtraLayerView(ReceiverObj):
@@ -627,9 +600,11 @@ class ExtraLayerView(ReceiverObj):
         if ev.type == EngineEvTypes.LOGICUPDATE:
             if not self.ft:
                 self.ft = pygame.font.Font(None, 17)
-            self.img_fps = self.ft.render(" {:.2f}fps ".format(clock.get_fps()), 1, (0, 0, 0), (250, 244, 244))
+            # TODO you can uncomment this to display FPS when benchmarking
+            # self.img_fps = self.ft.render(" {:.2f}fps ".format(clock.get_fps()), 1, (0, 0, 0), (250, 244, 244))
 
         elif ev.type == EngineEvTypes.PAINT:
+            #ev.screen.fill('navyblue')
             self.console.draw()  # console draw
             if self.img_fps:
                 ev.screen.blit(self.img_fps, (4, 4))
@@ -844,28 +819,28 @@ class PathCtrl(kengi.event.EventReceiver):
 class ExploreState(BaseGameState):
     def __init__(self, gs_id):
         super().__init__(gs_id)
-        self.m = self.v = self.v2 = self.c = None
+        self.m = self.explore_view = self.v2 = self.c = None
 
     def enter(self):
         global ingame_console
         the_screen = kengi.get_surface()
 
-        self.v = _init_specific_stuff(the_screen)
-        self.v.turn_on()
+        self.explore_view = _init_specific_stuff(the_screen)
+        # self.explore_view.block_wallpaper = True
+        self.explore_view.turn_on()
 
         # GameEventLogger().turn_on()
         PathCtrl().turn_on()
         BasicCtrl().turn_on()
 
-        build_console(the_screen)
-        ingame_cons = ingame_console
-        self.v2 = ExtraLayerView(ingame_cons)
+        ingame_console = build_console(the_screen)
+        self.v2 = ExtraLayerView(ingame_console)
         self.v2.turn_on()
 
         # self.m = UthModel()
         # self.v = UthView(self.m)
         # self.v.turn_on()
-        tmp = ExtraGuiLayerCtrl(ingame_cons)
+        tmp = ExtraGuiLayerCtrl(ingame_console)
         tmp.mode = 'modern'
         self.c = tmp
         self.c.turn_on()
@@ -873,19 +848,19 @@ class ExploreState(BaseGameState):
     def pause(self):
         self.c.turn_off()
         self.v2.turn_off()
-        self.v.turn_off()
+        self.explore_view.turn_off()
 
     def resume(self):
         # kengi.screen_param(MONMODE, paintev=paint_event)
         # self.v.screen = kengi.get_surface()  # manually update the ref on vscreen
-        self.v.turn_on()
+        self.explore_view.turn_on()
         self.v2.turn_on()
         self.c.turn_on()
 
     def release(self):
         self.c.turn_off()
         self.c = None
-        self.v = None
+        self.explore_view = None
 
 
 # -----------------------------------------------------------------/
@@ -1551,10 +1526,12 @@ def game_enter(vmstate):
         glvars.set_portals(vmstate.portals_func())
 
     # ---------------- DEEP HACK (by Tom)---------------
-    #if katasdk.runs_in_web():
-    #    katasdk.kengi.pygame.bridge.jsbackend_cls.set_crt_filter(True)
-    # --
-    kengi.init(1, caption='niobepolis - unstable')
+    if webctx():
+        katasdk.kengi.pygame.bridge.jsbackend_cls.set_crt_filter(True)
+
+    #kengi.init(3, caption='niobepolis - unstable')
+    kengi.init(3)
+    kengi.isometric.IsometricMapViewer.MEGAOPTIM = True
 
     mger = kengi.event.EventManager.instance()  # works only after a .init(...) operation
     scr = kengi.get_surface()
@@ -1592,7 +1569,8 @@ def game_update(infot=None):
 
 
 def game_exit(vmstate):
-    print('niobepolis->EXIT. The vmstate is: ', vmstate)
+    if webctx():
+        katasdk.kengi.pygame.bridge.jsbackend_cls.set_crt_filter(False)
     kengi.quit()
 
 
@@ -1600,5 +1578,5 @@ if __name__ == '__main__':
     game_enter(None)
     ret = None
     while (ret is None) or ret[0] != 1:
-        ret = game_update()
+        ret = game_update(time.time())
     game_exit(None)

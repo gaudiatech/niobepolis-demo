@@ -280,6 +280,11 @@
  "orientation":"isometric",
  "properties":[
         {
+         "name":"mapname",
+         "type":"string",
+         "value":"casino"
+        }, 
+        {
          "name":"wrap_x",
          "type":"bool",
          "value":false
