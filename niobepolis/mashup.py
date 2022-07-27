@@ -8,10 +8,10 @@ import katagames_engine as kengi
 #kengi = katasdk.kengi
 kengi.bootstrap_e()
 
+# - global constants
+WARP_BACK = [2, 'editor']
 DEBUG = False
 MAX_FPS = 133
-
-
 
 GameStates = kengi.struct.enum(
     'Explore',
@@ -164,21 +164,23 @@ def _init_specific_stuff(refscr):
 
 
 # ---------------------- game entities
-class Character(kengi.isometric.model.IsometricMapObject):
+class Character(IsoMapObject):
     def __init__(self, x, y):
         super().__init__()
         self.x = x
         self.y = y
-        self.name = "PC"
-        self.surf = pygame.image.load("assets/avatar.png").convert_alpha()
+        self.surf = pygame.image.load("assets/avatar0.png").convert_alpha()
+        self.ox = self.oy = 0
+        self.flag_auth = False
 
     def __call__(self, dest_surface, sx, sy, mymap):
-        mydest = self.surf.get_rect(midbottom=(sx, sy))
+        # mydest = self.ht.get_rect(midbottom=(sx, sy))
+        # dest_surface.blit(self.ht, mydest)
+        mydest = self.surf.get_rect(midbottom=(sx + self.ox, sy + self.oy))
         dest_surface.blit(self.surf, mydest)
 
 
 class Door(IsoMapObject):
-
     def bump(self):
         # Call this method when the PC bumps into this portal.
         if "dest_map" in self.properties:
@@ -189,7 +191,6 @@ class Door(IsoMapObject):
                 CgmEvent(MyEvTypes.MapChanges, new_map=dest_map, gate_name=dest_door)
             )
 
-
 class GlowingPortal(Door):
     PORTAL_SPR_SHEET = None
 
@@ -199,7 +200,6 @@ class GlowingPortal(Door):
 
         # we can do it this way, but its very non-optimized in web ctx:
         # self.surf = pygame.image.load("assets/portalRings2.png").convert_alpha()
-
         # alternative:
         if self.__class__.PORTAL_SPR_SHEET is None:
             self.__class__.PORTAL_SPR_SHEET = kengi.gfx.Spritesheet("assets/portalRings2.png")
@@ -225,7 +225,6 @@ class GlowingPortal(Door):
         # mydest.midbottom = (sx, sy)
         # dest_surface.blit(self.surf, mydest, pygame.Rect(self.frame * 32, 0, 32, 32))
         # self.frame = (self.frame + 1) % 5
-
         # alternative:
         self.frame = (self.frame + 1) % self.PORTAL_SPR_SHEET.card
         dest_surface.blit(
@@ -286,44 +285,38 @@ OBJECT_CLASSES = {
     "SlotMachine": SlotMachine
 }
 
-# --------------------- declarations zero: console etc ----------------
-
-
-# variables for the current script)
+# --------------------------------------------------
+#   declarations: IN GAME console
+# --------------------------------------------------
 ingame_console = None
-
 isomap_viewer = None
 to_edit = None
-my_x, my_y = 0, 0  # old offset for using the camera (deprecated, I think)
-posdecor = list()
-vscr_size = None
-strcutter = False
 leaving_niobe = False
 
-# - constants
-CODE_GRASS = 203  # deprecated
-BG_COLOR = (40, 40, 68)
-CON_FONT_COLOR = (13, 253, 8)
-WARP_BACK = [2, 'editor']
+# vars used by the stellar interface /the katagames API
+browser_wait = False
+need_to_format_pubkey = False
+stored_pubkey = ''
+player_id = 0
 
 # extra parsing func (for the ig console), lets you call func like: name(arg1,...,argn)
 re_function = re.compile(r'(?P<name>\S+)(?P<params>[\(].*[\)])')
 
-
-def build_console(objscreen):
-    screensize = objscreen.get_size()
-    res = kengi.console.CustomConsole(
-        objscreen,
+CON_FONT_COLOR = (255, 0, 0)  # for now, changing font color doesnt work due to the NEW ft system being incomplete
+def build_console(screen):
+    global ingame_console
+    screensize = screen.get_size()
+    ingame_console = kengi.console.CustomConsole(
+        screen,
         (0, 0, screensize[0], int(0.9 * screensize[1])),  # takes up 90% of the scr height
-        functions=listing_all_console_func,
+        functions=console_functions_listing,
         key_calls={},
         vari={"A": 100, "B": 200, "C": 300},
         syntax={re_function: console_func},
-        fontobj=pygame.font.Font(None, 22)
-        # kengi.gui.ImgBasedFont('assets/gibson1_font.png', CON_FONT_COLOR)  # new ft system
+        fontobj= kengi.gui.ImgBasedFont('assets/(niobepolis)gibson1_font.png', CON_FONT_COLOR)  # the NEW ft system
     )
-    res.set_motd('-Niobe Polis CONSOLE rdy-\n type "help" if needed')
-    return res
+    ingame_console.set_motd('-Niobe Polis CONSOLE rdy-\n type "help" if needed')
+
 
 # --------- ignore this code, its just to un-break things
 # after removing the dependency to KataSDK
@@ -355,17 +348,14 @@ def console_func(console, match):
 
 
 # --------------- implem of console functions, docstrings are used for help ------------------START
-def _gencb(x):
-    global browser_res, browser_wait, strcutter
-    browser_res = x
+def _callback_display_stellarinfo(x):
+    global browser_wait, need_to_format_pubkey
     browser_wait = False
-    if strcutter:
-        strcutter = False
-
+    if need_to_format_pubkey:
+        need_to_format_pubkey = False
         def _chunkstring(string, length):
             return (string[0 + i:length + i] for i in range(0, len(string), length))
-
-        tlines = list(_chunkstring(browser_res, 4))
+        tlines = list(_chunkstring(x, 4))
         dlines = list()
         cpt = 0
         while len(tlines):
@@ -375,12 +365,30 @@ def _gencb(x):
             else:
                 x = tlines.pop(0) + ' ' + tlines.pop(0)
             dlines.append(x)
-
         for one_line in dlines:
             ingame_console.output(one_line)
+    else:
+        ingame_console.output(x)
+
+
+def _callback_use_pubkey_to_auth(x):
+    global browser_wait, ingame_console, stored_pubkey, player_id
+    browser_wait = False
+    given_pubkey = x
+    if len(given_pubkey) > 24 and given_pubkey[0] == 'G':
+        stored_pubkey = given_pubkey
+        res_auth = katasdk.serv_func_module().auth_via_pubkey(given_pubkey)
+        if res_auth[0]:
+            player_id = res_auth[0]
+            ingame_console.output('Auth via Stellar acc OK. Welcome {}'.format(res_auth[1]))
+            if not isomap_player_entity.flag_auth:
+                isomap_player_entity.surf = pygame.image.load('assets/avatar.png')
+
+        else:
+            ingame_console.output('Auth via Stellar acc Fails (result:{})'.format(res_auth))
 
     else:
-        ingame_console.output(browser_res)
+        ingame_console.output('Err: invalid given_pubkey:', given_pubkey)
 
 
 def gamelist():
@@ -397,6 +405,17 @@ def gamelist():
             ret_txt += li + '\n'
         return ret_txt
     return 'cannot get the list now'
+
+
+def wealth():
+    """
+    displays the wealth of the player (according to server)
+    :return:
+    """
+    if player_id:
+        return "you own {:,.2f} CR".format(katasdk.serv_func_module().get_user_balance(player_id))
+    else:
+        return 'cannot read the balance now, use auth first!'
 
 
 def gamelist2():
@@ -417,12 +436,12 @@ def gamelist2():
 
 def stellar_console_func(subcmd):
     """
-    Stellar bridge. Use: stellar CMD; CMD in {test,network,pkey}
+    Stellar bridge. Use: stellar CMD; CMD in {test,network,pubkey}
     """
-    global browser_wait, strcutter
-    sbridge = katasdk.stellar
+    global browser_wait, need_to_format_pubkey
+    stellar_bridge = katasdk.stellar
     if 'test' == subcmd:
-        ret = sbridge.test_connection()
+        ret = stellar_bridge.test_connection()
 
         def _proc_stellartest_result(x, consol):
             consol.output("Freighter plugin's ready!" if bool(x) else "Freighter plugin not available.")
@@ -431,12 +450,12 @@ def stellar_console_func(subcmd):
 
     elif 'network' == subcmd:
         browser_wait = True
-        sbridge.get_network(_gencb)
+        stellar_bridge.get_network(_callback_display_stellarinfo)
 
-    elif 'pkey' == subcmd:
+    elif 'pubkey' == subcmd:
         browser_wait = True
-        strcutter = True
-        sbridge.get_pkey(_gencb)
+        need_to_format_pubkey = True
+        stellar_bridge.get_pkey(_callback_display_stellarinfo)
     else:
         return 'error: stellar cmd, cf. help stellar'
 
@@ -557,22 +576,69 @@ def dohalt():
     return 'quit niobe requested.'
 
 
-listing_all_console_func = {  # IMPORTANT REMINDER!!
-    # All functions listed here need to RETURN smth and they
-    # need to have 1 line of docstring, and include a
-    # "Use: xxx aa bb"
-    # part at the end, otherwise the cmd "help cmd_name" would crash the soft!
+def opentab(arg):
+    """
+    Opens an URL in a new tab of the browser. Usage: opentab URL
+    :param arg: what url to open?
+    :return:
+    """
+    if not webctx():
+        return 'this does nothing in local ctx'
+    global glvars
+    from browser import window
+    window.open_new_tab(glvars.ref_vmstate.get_prefix_url()+arg)
+    return 'tab open - ok'
+
+
+def regular_auth_func(name, plain_pwd):
+    global player_id
+    """
+    send an auth request to the game server
+    :param name:
+    :param plain_pwd:
+    :return:
+    """
+    res_auth = katasdk.serv_func_module().try_auth_server(name, plain_pwd)
+    if not res_auth:
+        return False
+    else:
+        player_id = res_auth
+    if not isomap_player_entity.flag_auth:
+        isomap_player_entity.surf = pygame.image.load('assets/avatar.png')
+    return res_auth
+
+
+def request_auth_via_f():
+    global browser_wait
+    """
+    send an auth request using the FREIGHTER plug-in
+    :param pubkey:
+    :return:
+    """
+    # lance la procédure en async
+    browser_wait = True
+    stellar_bridge = katasdk.stellar
+    stellar_bridge.get_pkey(_callback_use_pubkey_to_auth)  # .auth_via_pubkey itself will be called by callback func
+    return 'processing...'
+
+
+# IMPORTANT REMINDER:
+# functions listed below need to RETURN smth, plus they need to have 1 line of docstring,
+# including a "Use: xxx aa bb" part at the end
+console_functions_listing = {
+    # "help", "clear", "echo" are all built-in within the IgConsole object
     "add": add,
-    # clear
-    # echo
+    "alt_auth": regular_auth_func,
+    "auth": request_auth_via_f,
+    "balance": wealth,
     "clone": clonec,
     "edit": cedit,
     "erase": erase,
     "gamelist": gamelist,
-    # help
     "mul": mul,
+    "opentab": opentab,
     "scrsize": size,
-    "templates": gamelist2,  # like gamelist but shows only r.-o games
+    "templates": gamelist2,  # it's like gamelist but shows only read-only games
     "tp": tp,
 }
 
@@ -583,9 +649,9 @@ def webctx():
 
 
 if not webctx():
-    listing_all_console_func["halt"] = dohalt
+    console_functions_listing["halt"] = dohalt
 else:
-    listing_all_console_func["stellar"] = stellar_console_func
+    console_functions_listing["stellar"] = stellar_console_func
 
 
 class ExtraLayerView(ReceiverObj):
@@ -647,25 +713,6 @@ class ExtraGuiLayerCtrl(ReceiverObj):
 
             if leaving_niobe:
                 glvars.interruption = [1, None]
-
-
-class Character(kengi.isometric.model.IsometricMapObject):
-    def __init__(self, x, y):
-        super().__init__()
-        self.x = x
-        self.y = y
-
-        self.surf = pygame.image.load("assets/avatar.png").convert_alpha()
-        # self.ht = pygame.image.load("assets/half-floor-tile.png").convert_alpha()
-        # self.ht.set_colorkey((255, 0, 255))
-        # self.surf.set_colorkey((0,0,255))
-        self.ox = self.oy = 0
-
-    def __call__(self, dest_surface, sx, sy, mymap):
-        # mydest = self.ht.get_rect(midbottom=(sx, sy))
-        # dest_surface.blit(self.ht, mydest)
-        mydest = self.surf.get_rect(midbottom=(sx + self.ox, sy + self.oy))
-        dest_surface.blit(self.surf, mydest)
 
 
 # ------------- util class for movement -------------
@@ -833,14 +880,15 @@ class ExploreState(BaseGameState):
         PathCtrl().turn_on()
         BasicCtrl().turn_on()
 
-        ingame_console = build_console(the_screen)
-        self.v2 = ExtraLayerView(ingame_console)
+        build_console(the_screen)
+        ingame_cons = ingame_console
+        self.v2 = ExtraLayerView(ingame_cons)
         self.v2.turn_on()
 
         # self.m = UthModel()
         # self.v = UthView(self.m)
         # self.v.turn_on()
-        tmp = ExtraGuiLayerCtrl(ingame_console)
+        tmp = ExtraGuiLayerCtrl(ingame_cons)
         tmp.mode = 'modern'
         self.c = tmp
         self.c.turn_on()
@@ -1519,16 +1567,16 @@ def game_enter(vmstate):
     global mger, scr, paint_event, lu_event
 
     # bind vmstate to glvars, update glvars accordingly
-    if vmstate:
+    if glvars.ref_vmstate:
         glvars.ref_vmstate = vmstate
         glvars.cached_gamelist = vmstate.gamelist_func()
         glvars.ref_vmstate = vmstate
         glvars.set_portals(vmstate.portals_func())
 
     # ---------------- DEEP HACK (by Tom)---------------
-    if webctx():
-        katasdk.kengi.pygame.bridge.jsbackend_cls.set_crt_filter(True)
-
+    # if katasdk.runs_in_web():
+    # katasdk.kengi.pygame.bridge.jsbackend_cls.set_crt_filter(True)
+    # --
     #kengi.init(3, caption='niobepolis - unstable')
     kengi.init(3)
     kengi.isometric.IsometricMapViewer.MEGAOPTIM = True
@@ -1569,8 +1617,8 @@ def game_update(infot=None):
 
 
 def game_exit(vmstate):
-    if webctx():
-        katasdk.kengi.pygame.bridge.jsbackend_cls.set_crt_filter(False)
+    # katasdk.kengi.pygame.bridge.jsbackend_cls.set_crt_filter(False)
+
     kengi.quit()
 
 
