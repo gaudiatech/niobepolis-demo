@@ -8,10 +8,12 @@ import katagames_engine as kengi
 #kengi = katasdk.kengi
 kengi.bootstrap_e()
 
+
 # - global constants
 WARP_BACK = [2, 'editor']
 DEBUG = False
 MAX_FPS = 133
+
 
 GameStates = kengi.struct.enum(
     'Explore',
@@ -296,8 +298,6 @@ leaving_niobe = False
 # vars used by the stellar interface /the katagames API
 browser_wait = False
 need_to_format_pubkey = False
-stored_pubkey = ''
-player_id = 0
 
 # extra parsing func (for the ig console), lets you call func like: name(arg1,...,argn)
 re_function = re.compile(r'(?P<name>\S+)(?P<params>[\(].*[\)])')
@@ -372,23 +372,25 @@ def _callback_display_stellarinfo(x):
 
 
 def _callback_use_pubkey_to_auth(x):
-    global browser_wait, ingame_console, stored_pubkey, player_id
+    global browser_wait, ingame_console
     browser_wait = False
     given_pubkey = x
+    errmsg = 'Err: invalid given_pubkey:', given_pubkey
     if len(given_pubkey) > 24 and given_pubkey[0] == 'G':
-        stored_pubkey = given_pubkey
-        res_auth = katasdk.serv_func_module().auth_via_pubkey(given_pubkey)
+        c = katasdk.get_pyconnector()
+        if not c.set_pubkey(given_pubkey, ingame_console):
+            ingame_console.output(errmsg)
+            return
+
+        res_auth = c.auth_via_pubkey(given_pubkey)
         if res_auth[0]:
-            player_id = res_auth[0]
             ingame_console.output('Auth via Stellar acc OK. Welcome {}'.format(res_auth[1]))
             if not isomap_player_entity.flag_auth:
                 isomap_player_entity.surf = pygame.image.load('assets/avatar.png')
-
         else:
             ingame_console.output('Auth via Stellar acc Fails (result:{})'.format(res_auth))
-
     else:
-        ingame_console.output('Err: invalid given_pubkey:', given_pubkey)
+        ingame_console.output(errmsg)
 
 
 def gamelist():
@@ -412,10 +414,26 @@ def wealth():
     displays the wealth of the player (according to server)
     :return:
     """
-    if player_id:
-        return "you own {:,.2f} CR".format(katasdk.serv_func_module().get_user_balance(player_id))
+    c = katasdk.get_pyconnector()
+    if c.is_logged:
+        return "you own {:,d} CR".format(math.floor(c.get_user_balance()))
     else:
         return 'cannot read the balance now, use auth first!'
+
+
+def get_n_sign_xdr(amount):
+    """
+    Deposit aqua tokens to get the same amount of credits. Use: deposit amount
+    :param amount:
+    """
+    c = katasdk.get_pyconnector()
+    if not c.is_logged:
+        return 'you must be logged before you can deposit!'
+    else:
+        if int(amount) < 1:
+            return 'error: invalid amount'
+        else:
+            return c.request_token_deposit(int(amount), ingame_console)
 
 
 def gamelist2():
@@ -591,19 +609,19 @@ def opentab(arg):
 
 
 def regular_auth_func(name, plain_pwd):
-    global player_id
     """
     send an auth request to the game server
     :param name:
     :param plain_pwd:
     :return:
     """
-    res_auth = katasdk.serv_func_module().try_auth_server(name, plain_pwd)
+    c = katasdk.get_pyconnector()
+    res_auth = c.try_auth_server(name, plain_pwd)
     if not res_auth:
         return False
-    else:
-        player_id = res_auth
+
     if not isomap_player_entity.flag_auth:
+        isomap_player_entity.flag_auth = True
         isomap_player_entity.surf = pygame.image.load('assets/avatar.png')
     return res_auth
 
@@ -640,6 +658,9 @@ console_functions_listing = {
     "scrsize": size,
     "templates": gamelist2,  # it's like gamelist but shows only read-only games
     "tp": tp,
+
+    # temp
+    "deposit": get_n_sign_xdr,
 }
 
 
@@ -1290,19 +1311,15 @@ class UthView(ReceiverObj):
         self.bg = None
         self._my_assets = dict()
         self.chip_spr = dict()
-
         self._assets_rdy = False
-
         self._mod = model
         self.ft = pygame.font.Font(None, 34)
         self.small_ft = pygame.font.Font(None, 21)
-
         self.info_msg0 = None
         self.info_msg1 = None  # will be used to tell the player what he/she has to do!
         self.info_msg2 = None
-
-        # draw cash amount
-        self.cash_etq = self.ft.render(str(self._mod.cash) + '$ ', True, self.TEXTCOLOR, self.BG_TEXTCOLOR)
+        txt = str(self._mod.cash) + '$ '
+        self.cash_etq = self.ft.render(txt, True, self.TEXTCOLOR, self.BG_TEXTCOLOR)  # draw cash amount
 
     def _load_assets(self):
         self.bg = pygame.image.load(BACKGROUND_IMG_PATH)
@@ -1313,7 +1330,6 @@ class UthView(ReceiverObj):
             y = PokerHand.adhoc_mapping(card_cod[0]).lstrip('0') + card_cod[1].upper()  # convert card code to path
             self._my_assets[card_cod] = spr_sheet[
                 f'{y}.png']  # pygame.transform.scale(spr_sheet[f'{y}.png'], CARD_SIZE_PX)
-
         spr_sheet2 = kengi.gfx.JsonBasedSprSheet('assets/pokerchips')
         for chip_val_info in ('2a', '2b', '5', '10', '20'):
             y = {
@@ -1330,7 +1346,6 @@ class UthView(ReceiverObj):
             spr.rect = spr.image.get_rect()
             spr.rect.center = PLAYER_CHIPS[chip_val_info]
             self.chip_spr['2' if chip_val_info in ('2a', '2b') else chip_val_info] = spr
-
         self._assets_rdy = True
 
     def _update_displayed_status(self):
@@ -1567,11 +1582,15 @@ def game_enter(vmstate):
     global mger, scr, paint_event, lu_event
 
     # bind vmstate to glvars, update glvars accordingly
-    if glvars.ref_vmstate:
+    # bind vmstate to glvars, update glvars accordingly
+    if vmstate:
         glvars.ref_vmstate = vmstate
+        print('* det gamelist xx *')
         glvars.cached_gamelist = vmstate.gamelist_func()
         glvars.ref_vmstate = vmstate
         glvars.set_portals(vmstate.portals_func())
+    else:
+        print('----- running niobe without VM -------')
 
     # ---------------- DEEP HACK (by Tom)---------------
     # if katasdk.runs_in_web():
