@@ -117,7 +117,6 @@ def _load_maps():
     # could use the legacy mode, so map iso objects
     # use "type" attribute key instead of "class"
     # kengi.isometric.set_tiled_version('1.8')
-
     kengi.isometric.model.IsometricLayer.flag_csv = True
     maps = [
         IsoMap.load(['assets', ], 'city.tmj', OBJECT_CLASSES),
@@ -126,13 +125,13 @@ def _load_maps():
         IsoMap.load(['assets', ], 'casino.tmj', OBJECT_CLASSES)
     ]
     tilemap_width, tilemap_height = maps[0].width, maps[0].height
-    print('------------------- MAPS LOADED x3 ------------------')
 
 
 def _init_specific_stuff(refscr):
     global map_viewer, maps, isomap_player_entity
 
     _load_maps()
+    # continue init.
     map_viewer = kengi.isometric.IsometricMapViewer(
         maps[0], refscr,
         up_scroll_key=pygame.K_UP, down_scroll_key=pygame.K_DOWN,
@@ -143,7 +142,6 @@ def _init_specific_stuff(refscr):
         landing_loc = glvars.ref_vmstate.landing_spot
     else:
         landing_loc = [0, 16, 14]  # default location
-
     isomap_player_entity = Character(landing_loc[1], landing_loc[2])
 
     for tm in maps:
@@ -276,6 +274,7 @@ def manually_move_player(new_map, new_posx, new_posy):
     current_path = None
     current_tilemap = new_map
     isomap_player_entity.x, isomap_player_entity.y = new_posx + 0.5, new_posy + 0.5
+    print('manually move player to map named: ', maps[current_tilemap].mapname)
     map_viewer.switch_map(maps[current_tilemap])
 
 
@@ -713,6 +712,21 @@ class ExtraGuiLayerCtrl(ReceiverObj):
                 if self.console.active:
                     print('desactivation console')
                     self.console.desactivate()
+            # ----------------------------------
+            #  uncomment this if you need to refine the megaoptim stuff
+            # ----------------------------------
+            # elif ev.key == pygame.K_RIGHT:
+            #     kengi.isometric.IsometricMapViewer.FLOOR_MAN_OFFSET[0][0] -= 1
+            #     print(kengi.isometric.IsometricMapViewer.FLOOR_MAN_OFFSET)
+            # elif ev.key == pygame.K_LEFT:
+            #     kengi.isometric.IsometricMapViewer.FLOOR_MAN_OFFSET[0][0] += 1
+            #     print(kengi.isometric.IsometricMapViewer.FLOOR_MAN_OFFSET)
+            # elif ev.key == pygame.K_UP:
+            #     kengi.isometric.IsometricMapViewer.FLOOR_MAN_OFFSET[0][1] += 1
+            #     print(kengi.isometric.IsometricMapViewer.FLOOR_MAN_OFFSET)
+            # elif ev.key == pygame.K_DOWN:
+            #     kengi.isometric.IsometricMapViewer.FLOOR_MAN_OFFSET[0][1] -= 1
+            #     print(kengi.isometric.IsometricMapViewer.FLOOR_MAN_OFFSET)
             elif ev.key == pygame.K_F4:
                 game_exit(None)
                 game_enter(glvars.ref_vmstate)
@@ -1595,10 +1609,14 @@ def game_enter(vmstate):
     # ---------------- DEEP HACK (by Tom)---------------
     # if katasdk.runs_in_web():
     # katasdk.kengi.pygame.bridge.jsbackend_cls.set_crt_filter(True)
-    # --
-    #kengi.init(3, caption='niobepolis - unstable')
+
     kengi.init(3)
-    kengi.isometric.IsometricMapViewer.MEGAOPTIM = True
+
+    IsoViewCls = kengi.isometric.IsometricMapViewer
+    # enable mega-optim (pre-rendered floor)
+    # + fine-tune offset to display the very large city.png img...
+    IsoViewCls.MEGAOPTIM = True
+    IsoViewCls.FLOOR_MAN_OFFSET[0] = [1984, 95]
 
     mger = kengi.event.EventManager.instance()  # works only after a .init(...) operation
     scr = kengi.get_surface()
@@ -1615,8 +1633,8 @@ def game_enter(vmstate):
     kengi.get_game_ctrl().turn_on()
     kengi.get_game_ctrl().init_state0()
 
-    # in case you need to debug poker:
-    # mger.post(CgmEvent( MyEvTypes.SlotMachineStarts))
+    # IN CASE YOU DEBUG POKER ::
+    # mger.post(CgmEvent(MyEvTypes.SlotMachineStarts))
 
 
 def game_update(infot=None):
