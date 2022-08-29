@@ -1,3 +1,6 @@
+linker.bat
+katagames_engine
+
 # Byte-compiled / optimized / DLL files
 .idea/
 __pycache__/

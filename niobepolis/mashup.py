@@ -5,9 +5,8 @@ import json
 #import katagames_sdk as katasdk
 #katasdk.bootstrap()
 import katagames_engine as kengi
-#kengi = katasdk.kengi
 kengi.bootstrap_e()
-
+#kengi = katasdk.kengi
 
 # - global constants
 WARP_BACK = [2, 'editor']
@@ -138,11 +137,16 @@ def _init_specific_stuff(refscr):
         left_scroll_key=pygame.K_LEFT, right_scroll_key=pygame.K_RIGHT
     )
     # - add map entities
-    if glvars.ref_vmstate and glvars.ref_vmstate.landing_spot is not None:
-        landing_loc = glvars.ref_vmstate.landing_spot
-    else:
+    if (glvars.ref_vmstate is None) or (glvars.ref_vmstate.landing_spot is None):
+        print('drop player to default spawn location...')
         landing_loc = [0, 16, 14]  # default location
+    else:
+        landing_loc = glvars.ref_vmstate.landing_spot
+        print('drop player to alternative spot: ', landing_loc)
+
     isomap_player_entity = Character(landing_loc[1], landing_loc[2])
+    if glvars.ref_vmstate:
+        glvars.ref_vmstate.landing_spot = None
 
     for tm in maps:
         if tm is not None:
@@ -274,7 +278,6 @@ def manually_move_player(new_map, new_posx, new_posy):
     current_path = None
     current_tilemap = new_map
     isomap_player_entity.x, isomap_player_entity.y = new_posx + 0.5, new_posy + 0.5
-    print('manually move player to map named: ', maps[current_tilemap].mapname)
     map_viewer.switch_map(maps[current_tilemap])
 
 
@@ -484,7 +487,7 @@ def tp(gametag):
     :return:
     """
     # check if it exists
-    if not katasdk.vmstate.has_game(gametag):
+    if not katasdk.get_vmstate().has_game(gametag):
         return 'game not found!'
     else:
         glvars.interruption = [2, gametag]
@@ -534,10 +537,10 @@ def cedit(cname):  # -------------------- experimental ----------------
             to_edit = cname
 
     global to_edit
-    if not katasdk.vmstate.has_game(cname):
+    if not katasdk.get_vmstate().has_game(cname):
         ingame_console.cb_func = _cedit_creation
         return 'cartridge doesnt exist, create it? yes/no'
-    if katasdk.vmstate.has_ro_flag(cname):
+    if katasdk.get_vmstate().has_ro_flag(cname):
         ingame_console.cb_func = _cedit_readonly
         return 'r.-o cartridge: U wont be able to save, view code anyway? yes/no'
     else:
@@ -552,11 +555,11 @@ def erase(cname):
     :return:
     """
     # - handling case read-only stuff!
-    if not katasdk.vmstate.has_game(cname):
+    if not katasdk.get_vmstate().has_game(cname):
         return 'Not found'
-    if katasdk.vmstate.has_ro_flag(cname):
+    if katasdk.get_vmstate().has_ro_flag(cname):
         return 'Rejected: r.-o /protected cartridge'
-    katasdk.vmstate.persist_functions['erase_cart'](cname)
+    katasdk.get_vmstate().persist_functions['erase_cart'](cname)
     return 'Reset op. OK'
 
 
@@ -564,22 +567,23 @@ def clonec(cname1, cname2):
     """
     Create a cartridge by cloning an existing cartridge. Use: clone cartNamA cartNamB
     """
+    global ingame_console
 
-    def _clonec_overwrite(saisie):
-        global to_edit
-        if saisie == 'yes':
-            katasdk.vmstate.persist_functions['clone_cart'](cname1, cname2)
-            ingame_console.output('cloning done.')
-
-    if not katasdk.vmstate.has_game(cname1):
-        return 'Not found'
-    if katasdk.vmstate.has_ro_flag(cname2):
-        return 'Rejected: target cartridge is r.-o /protected'
-    if katasdk.vmstate.has_game(cname2):
-        ingame_console.cb_func = _clonec_overwrite
-        return 'Target cartridge already exists, overwrite? yes/no'
-
-    katasdk.vmstate.persist_functions['clone_cart'](cname1, cname2)
+    # def _clonec_overwrite(saisie):
+    #     if saisie == 'yes':
+    #         katasdk.get_vmstate().clone_cart(cname1, cname2)
+    #         ingame_console.output('cloning done.')
+    vs = katasdk.get_vmstate()
+    if not vs.has_game(cname1):
+        return 'Source cartridge Not found'
+    if vs.has_game(cname2):
+        return 'Rejected: target already exists'
+        # if vs.has_ro_flag(cname2):
+        #     return 'Rejected: target cartridge is r.-o /protected'
+        # else:
+        #     ingame_console.cb_func = _clonec_overwrite
+        #     return 'Target cartridge already exists, overwrite? yes/no'
+    vs.clone_cart(cname1, cname2)
     return 'cloning done.'
 
 
@@ -665,7 +669,7 @@ console_functions_listing = {
 
 def webctx():
     return False
-    #return katasdk.runs_in_web()
+    # return katasdk.runs_in_web()
 
 
 if not webctx():
@@ -690,28 +694,34 @@ class ExtraLayerView(ReceiverObj):
             # self.img_fps = self.ft.render(" {:.2f}fps ".format(clock.get_fps()), 1, (0, 0, 0), (250, 244, 244))
 
         elif ev.type == EngineEvTypes.PAINT:
+            global ingame_console
             #ev.screen.fill('navyblue')
-            self.console.draw()  # console draw
+            try:
+                self.console.draw()  # console draw
+            except ValueError:
+                ingame_console = None
+                build_console(kengi.get_surface())
+                self.console = ingame_console
+                self.console.output('A console crash occured, sorry')
+                # self.console = kengi.console.CustomConsole()
             if self.img_fps:
                 ev.screen.blit(self.img_fps, (4, 4))
 
 
 class ExtraGuiLayerCtrl(ReceiverObj):
-    def __init__(self, cons):
+    def __init__(self,):
         super().__init__()
-        if cons is None:
-            raise ValueError('need a real instance of ingame console')
-        self.console = cons
         self.mode = 'legacy'  # you can set this var to 'modern' to use Terminal events instead of F1 to open
 
     def proc_event(self, ev, source=None):
-        self.console.process_input([ev, ])  # ne sais pas cmt gerer ca autrement
+        global ingame_console
 
         if ev.type == pygame.KEYDOWN:
             if ev.key == pygame.K_ESCAPE:
-                if self.console.active:
+                if ingame_console.active:
                     print('desactivation console')
-                    self.console.desactivate()
+                    ingame_console.desactivate()
+
             # ----------------------------------
             #  uncomment this if you need to refine the megaoptim stuff
             # ----------------------------------
@@ -735,8 +745,11 @@ class ExtraGuiLayerCtrl(ReceiverObj):
                 # paint_event.screen = newscr
                 # map_viewer.screen = newscr
 
+            else:
+                ingame_console.process_input([ev, ])  # ne sais pas cmt gerer ca autrement
+
         elif ev.type == MyEvTypes.TerminalStarts:
-            self.console.activate()
+            ingame_console.activate()
 
         elif ev.type == MyEvTypes.SlotMachineStarts:
             self.pev(EngineEvTypes.PUSHSTATE, state_ident=GameStates.Poker)
@@ -923,7 +936,7 @@ class ExploreState(BaseGameState):
         # self.m = UthModel()
         # self.v = UthView(self.m)
         # self.v.turn_on()
-        tmp = ExtraGuiLayerCtrl(ingame_cons)
+        tmp = ExtraGuiLayerCtrl()
         tmp.mode = 'modern'
         self.c = tmp
         self.c.turn_on()
@@ -1592,6 +1605,9 @@ class PokerState(BaseGameState):
 #  base functions for katasdk compatibility
 # -------------------------------
 
+
+# - to add in web ctx
+# @katasdk.tag_gameenter
 def game_enter(vmstate):
     global mger, scr, paint_event, lu_event
 
@@ -1600,7 +1616,7 @@ def game_enter(vmstate):
     if vmstate:
         glvars.ref_vmstate = vmstate
         print('* det gamelist xx *')
-        glvars.cached_gamelist = vmstate.gamelist_func()
+        glvars.cached_gamelist = vmstate.get_gamelist()
         glvars.ref_vmstate = vmstate
         glvars.set_portals(vmstate.portals_func())
     else:
@@ -1619,6 +1635,8 @@ def game_enter(vmstate):
     IsoViewCls.FLOOR_MAN_OFFSET[0] = [1984, 95]
 
     mger = kengi.event.EventManager.instance()  # works only after a .init(...) operation
+    mger.hard_reset()
+
     scr = kengi.get_surface()
     lu_event = CgmEvent(EngineEvTypes.LOGICUPDATE, curr_t=None)
     paint_event = CgmEvent(EngineEvTypes.PAINT, screen=scr)
@@ -1637,6 +1655,8 @@ def game_enter(vmstate):
     # mger.post(CgmEvent(MyEvTypes.SlotMachineStarts))
 
 
+# webctx
+# @katasdk.tag_gameupdate
 def game_update(infot=None):
     global lu_event, paint_event, mger, keep_going
     # use the kengi event system
@@ -1653,6 +1673,8 @@ def game_update(infot=None):
     clock.tick(MAX_FPS)
 
 
+# web ctx
+# @katasdk.tag_gameexit
 def game_exit(vmstate):
     # katasdk.kengi.pygame.bridge.jsbackend_cls.set_crt_filter(False)
 
