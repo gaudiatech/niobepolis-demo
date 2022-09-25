@@ -1,17 +1,23 @@
-import math
-import re
-import time
-import json
+
 #import katagames_sdk as katasdk
 #katasdk.bootstrap()
 import katagames_engine as kengi
 kengi.bootstrap_e()
 #kengi = katasdk.kengi
+import math
+import re
+import time
+import json
+import katagames_sdk as katasdk
+
+# katasdk.bootstrap()
+# import katagames_engine as kengi
+# kengi = katasdk.kengi
 
 # - global constants
 WARP_BACK = [2, 'editor']
 DEBUG = False
-MAX_FPS = 133
+DEFAULT_SPAWN_LOC = [0, 16, 14]
 
 
 GameStates = kengi.struct.enum(
@@ -40,7 +46,6 @@ MyEvTypes = kengi.event.enum_ev_types(
     'Defeat'  # contains: loss
 )
 
-
 # - aliases
 pygame = kengi.pygame
 evmodule = kengi.event
@@ -58,13 +63,14 @@ CardDeck = kengi.tabletop.CardDeck
 animobs = kengi.demolib.animobs
 dialogue = kengi.demolib.dialogue
 pathfinding = kengi.demolib.pathfinding
-IsoCursor = kengi.isometric.extras.IsometricMapQuarterCursor
 IsoMap = kengi.isometric.model.IsometricMap
 
 # global variables
+gft = None
+fps_show = False
 main_map_path = 'neo_exterior.tmx'
 conv_viewer = None
-conversation_ongoing = False
+active_gui_overlay = False
 current_path = None
 current_tilemap = 0
 maps = list()
@@ -77,9 +83,6 @@ tilemap_height = tilemap_width = 0
 # pr poker
 alea_xx = lambda_hand = epic_hand = list()
 
-# dirty patch
-IsoCursor.new_coord_system = False
-
 clock = pygame.time.Clock()
 mger = scr = None
 lu_event = paint_event = None
@@ -87,7 +90,8 @@ keep_going = True
 
 
 class GlVarsMockup:
-    MAXFPS = 45
+    MAXFPS = None  # <- no capping , 120
+
     PALIAS = {
         'greetings': 'assets/greetings.png',
         'tilefloor': 'assets/floor-tile.png',
@@ -136,17 +140,19 @@ def _init_specific_stuff(refscr):
         up_scroll_key=pygame.K_UP, down_scroll_key=pygame.K_DOWN,
         left_scroll_key=pygame.K_LEFT, right_scroll_key=pygame.K_RIGHT
     )
+    map_viewer.pc_cls = Character
+
     # - add map entities
-    if (glvars.ref_vmstate is None) or (glvars.ref_vmstate.landing_spot is None):
-        print('drop player to default spawn location...')
-        landing_loc = [0, 16, 14]  # default location
-    else:
+    if glvars.ref_vmstate and glvars.ref_vmstate.landing_spot:
+        print('drop player to alternative spot')
         landing_loc = glvars.ref_vmstate.landing_spot
-        print('drop player to alternative spot: ', landing_loc)
+    else:
+        print('drop player to default spawn location')
+        landing_loc = DEFAULT_SPAWN_LOC  # default location
 
     isomap_player_entity = Character(landing_loc[1], landing_loc[2])
-    if glvars.ref_vmstate:
-        glvars.ref_vmstate.landing_spot = None
+
+    # glvars.ref_vmstate.landing_spot = None
 
     for tm in maps:
         if tm is not None:
@@ -162,8 +168,7 @@ def _init_specific_stuff(refscr):
     # the rest
     cursor_image = pygame.image.load("assets/half-floor-tile.png")
     cursor_image.set_colorkey((255, 0, 255))
-
-    map_viewer.cursor = IsoCursor(0, 0, cursor_image, maps[0].layers[1])
+    map_viewer.cursor = kengi.isometric.IsoCursor(0, 0, cursor_image, maps[0].layers[1])
     return map_viewer
 
 
@@ -173,95 +178,114 @@ class Character(IsoMapObject):
         super().__init__()
         self.x = x
         self.y = y
-        self.surf = pygame.image.load("assets/avatar0.png").convert_alpha()
-        self.ox = self.oy = 0
+        self.surf = pygame.image.load("assets/avatar0.png") #.convert_alpha()
+        self.offx = -8
+        self.offy = -24
         self.flag_auth = False
 
-    def __call__(self, dest_surface, sx, sy, mymap):
+    #def __call__(self, dest_surface, sx, sy, mymap):
+        # [1]
         # mydest = self.ht.get_rect(midbottom=(sx, sy))
         # dest_surface.blit(self.ht, mydest)
-        mydest = self.surf.get_rect(midbottom=(sx + self.ox, sy + self.oy))
-        dest_surface.blit(self.surf, mydest)
+    def __call__(self, dest_surface, sx, sy, mymap):
+        # [v2]
+        # mydest = self.surf.get_rect(midbottom=(sx + self.ox, sy + self.oy))
+
+        # nb tom:
+        # OK i will crop the img on purpose, to cancel the impact of a known BACKEND2 bug
+        # (case: blit img -> (surf!=0) )
+        dest_surface.blit(self.surf, (sx+self.offx, sy+self.offy), area=(0, 0, 15, 31))
 
 
-class Door(IsoMapObject):
+class TriggerEntity(IsoMapObject):
+    SPR_SHEET = None
+    all_locations = dict()
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.drawingoffset = [-16, 0]
+
+        self.__class__.all_locations[(self.x, self.y)] = self
+        if self.__class__.SPR_SHEET is None:
+            self.__class__.SPR_SHEET = kengi.gfx.Spritesheet("assets/flashy-trigger.png")
+            self.__class__.SPR_SHEET.set_infos((32, 16))
+        self.emitter = CogObject()
+        # pr gerer anim
+        # --
+        self.frame = -1
+        self.phase_thresh = 8
+        self.phase = self.phase_thresh
+
+    @classmethod
+    def by_location(cls, known_pos):
+        return cls.all_locations[known_pos]
+
+    def __call__(self, dest_surface, sx, sy, mymap):
+        self.phase += 1
+        if self.phase > self.phase_thresh:
+            self.phase = 0
+            self.frame = (self.frame + 1) % self.SPR_SHEET.card
+        # --
+        dest_surface.blit(
+            self.SPR_SHEET[self.frame],
+            (sx +self.drawingoffset[0], sy+self.drawingoffset[1])  # anchor=midbottom -> it was manually computed
+        )
+
     def bump(self):
-        # Call this method when the PC bumps into this portal.
-        if "dest_map" in self.properties:
+        # prevent invisble triggers:
+        if not self.visible:
+            return
+
+        # let us use the event manager, so we achieve low-coupling
+        if self.goto == 'terminal':
+            self.emitter.pev(MyEvTypes.TerminalStarts)
+
+        elif self.goto == 'portal':
+            landing_cell = [int(self.cmap), self.x, self.y]
+            self.emitter.pev(MyEvTypes.PortalActivates, portal_id=self.ident, portal_lcell=landing_cell)
+            print('portal activates ', self.ident)
+
+        elif self.goto == 'npc':
+            self.properties["conversation"] = self.ident + '.json'
+            with open("assets/" + self.properties["conversation"], 'r') as fconv:
+                myconvo = dialogue.Offer.load_jsondata(fconv.read())
+                self.emitter.pev(
+                    EngineEvTypes.CONVSTARTS, convo_obj=myconvo, portrait=self.properties.get("portrait")
+                )
+
+        elif self.goto == 'map':  # TODO can we use: dest_x, dest_y instead of dest_door?
             dest_map = int(self.properties.get("dest_map", 0))
             dest_door = self.properties.get("dest_door")
             # let us use the event manager, so we achieve low-coupling
-            evmodule.EventManager.instance().post(
-                CgmEvent(MyEvTypes.MapChanges, new_map=dest_map, gate_name=dest_door)
-            )
+            self.emitter.pev(MyEvTypes.MapChanges, new_map=dest_map, gate_name=dest_door)
 
-class GlowingPortal(Door):
+
+class GlowingPortal(IsoMapObject):
     PORTAL_SPR_SHEET = None
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        self.drawoffset = [-16, -16]
         self.emitter = CogObject()
-
-        # we can do it this way, but its very non-optimized in web ctx:
-        # self.surf = pygame.image.load("assets/portalRings2.png").convert_alpha()
-        # alternative:
         if self.__class__.PORTAL_SPR_SHEET is None:
-            self.__class__.PORTAL_SPR_SHEET = kengi.gfx.Spritesheet("assets/portalRings2.png")
-            self.__class__.PORTAL_SPR_SHEET.tilesize = (32, 32)
+            sprsheet_obj = kengi.gfx.Spritesheet("assets/portalRings2.png")
+            self.__class__.PORTAL_SPR_SHEET = sprsheet_obj
+            self.__class__.PORTAL_SPR_SHEET.set_infos((32, 32))
+        # animated spr
         self.frame = -1
-
-    @property
-    def ident(self):
-        return self.properties.get("ident")
-
-    @ident.setter
-    def ident(self, new_value):
-        self.properties["ident"] = new_value
-
-    @property
-    def landing_cell(self):
-        if 'landing_cell' in self.properties:  # its optionnal
-            return json.loads(self.properties['landing_cell'])
+        self.phase_thresh = 14
+        self.phase = self.phase_thresh
 
     def __call__(self, dest_surface, sx, sy, mymap):
-        # we can do it this way, but its very non-optimized in web ctx
-        # mydest = pygame.Rect(0, 0, 32, 32)
-        # mydest.midbottom = (sx, sy)
-        # dest_surface.blit(self.surf, mydest, pygame.Rect(self.frame * 32, 0, 32, 32))
-        # self.frame = (self.frame + 1) % 5
-        # alternative:
-        self.frame = (self.frame + 1) % self.PORTAL_SPR_SHEET.card
+        # anim {
+        self.phase += 1
+        if self.phase > self.phase_thresh:
+            self.phase = 0
+            self.frame = (self.frame + 1) % self.PORTAL_SPR_SHEET.card
+        # } anim done
         dest_surface.blit(
             self.PORTAL_SPR_SHEET[self.frame],
-            (sx-16, sy-32)  # anchor=midbottom -> it was manually computed
-        )
-
-    def bump(self):
-        # let us use the event manager, so we achieve low-coupling
-        # evmodule.EventManager.instance().post(
-        #     CgmEvent(MyEvTypes.PortalActivates, portal_id=self.ident)
-        # )
-
-        self.emitter.pev(MyEvTypes.PortalActivates, portal_id=self.ident, portal_lcell=self.landing_cell)
-        print('portal activates ', self.ident)
-
-
-class NPC(kengi.isometric.model.IsometricMapObject):
-    def bump(self):
-        # Call this method when the PC bumps into this NPC.
-        if "conversation" in self.properties:
-            with open("assets/" + self.properties["conversation"], 'r') as fconv:
-                myconvo = dialogue.Offer.load_jsondata(fconv.read())
-                evmodule.EventManager.instance().post(
-                    CgmEvent(EngineEvTypes.CONVSTARTS, convo_obj=myconvo, portrait=self.properties.get("portrait"))
-                )
-
-
-class Terminal(kengi.isometric.model.IsometricMapObject):
-    def bump(self):
-        # Call this method when the PC bumps into this terminal.
-        evmodule.EventManager.instance().post(
-            CgmEvent(MyEvTypes.TerminalStarts)
+            (sx + self.drawoffset[0], sy + self.drawoffset[1])  # anchor=midbottom -> it was manually computed
         )
 
 
@@ -282,12 +306,11 @@ def manually_move_player(new_map, new_posx, new_posy):
 
 
 OBJECT_CLASSES = {
-    "Door": Door,
-    "NPC": NPC,
     "GlowingPortal": GlowingPortal,
-    "Terminal": Terminal,
+    "trigger": TriggerEntity,
     "SlotMachine": SlotMachine
 }
+
 
 # --------------------------------------------------
 #   declarations: IN GAME console
@@ -305,6 +328,8 @@ need_to_format_pubkey = False
 re_function = re.compile(r'(?P<name>\S+)(?P<params>[\(].*[\)])')
 
 CON_FONT_COLOR = (255, 0, 0)  # for now, changing font color doesnt work due to the NEW ft system being incomplete
+
+
 def build_console(screen):
     global ingame_console
     screensize = screen.get_size()
@@ -315,7 +340,7 @@ def build_console(screen):
         key_calls={},
         vari={"A": 100, "B": 200, "C": 300},
         syntax={re_function: console_func},
-        fontobj= kengi.gui.ImgBasedFont('assets/(niobepolis)gibson1_font.png', CON_FONT_COLOR)  # the NEW ft system
+        fontobj=kengi.gui.ImgBasedFont('assets/niobe_font.png', CON_FONT_COLOR)  # the NEW ft system
     )
     ingame_console.set_motd('-Niobe Polis CONSOLE rdy-\n type "help" if needed')
 
@@ -355,8 +380,10 @@ def _callback_display_stellarinfo(x):
     browser_wait = False
     if need_to_format_pubkey:
         need_to_format_pubkey = False
+
         def _chunkstring(string, length):
             return (string[0 + i:length + i] for i in range(0, len(string), length))
+
         tlines = list(_chunkstring(x, 4))
         dlines = list()
         cpt = 0
@@ -436,6 +463,21 @@ def get_n_sign_xdr(amount):
             return 'error: invalid amount'
         else:
             return c.request_token_deposit(int(amount), ingame_console)
+
+
+# -----------
+# on commence pareil que pr la fonction au-dessus
+# -----------
+def request_aqua_payment(amount):
+    """exchange a given amount of credits for aqua tokens"""
+    c = katasdk.get_pyconnector()
+    if not c.is_logged:
+        return 'you must be logged before you can withdraw!'
+    else:
+        if int(amount) < 1:
+            return 'error: invalid amount'
+        else:
+            return c.request_withdraw(int(amount))
 
 
 def gamelist2():
@@ -597,6 +639,16 @@ def dohalt():
     return 'quit niobe requested.'
 
 
+def signup_cmd():
+    """
+    Opens a browser tab so the user can Sign Up(create new account)
+    :return:
+    """
+    global glvars
+    glvars.ref_vmstate.proc_signup()
+    return 'tab opened for sign up!'
+
+
 def opentab(arg):
     """
     Opens an URL in a new tab of the browser. Usage: opentab URL
@@ -606,8 +658,7 @@ def opentab(arg):
     if not webctx():
         return 'this does nothing in local ctx'
     global glvars
-    from browser import window
-    window.open_new_tab(glvars.ref_vmstate.get_prefix_url()+arg)
+    glvars.ref_vmstate.open_tab(arg)
     return 'tab open - ok'
 
 
@@ -648,28 +699,30 @@ def request_auth_via_f():
 # including a "Use: xxx aa bb" part at the end
 console_functions_listing = {
     # "help", "clear", "echo" are all built-in within the IgConsole object
-    "add": add,
-    "alt_auth": regular_auth_func,
-    "auth": request_auth_via_f,
+    # sept22 -> commented junk commands
+    #"add": add,
+    "auth": regular_auth_func,
+    "fauth": request_auth_via_f,
     "balance": wealth,
     "clone": clonec,
     "edit": cedit,
     "erase": erase,
     "gamelist": gamelist,
-    "mul": mul,
-    "opentab": opentab,
-    "scrsize": size,
+    #"mul": mul,
+    #"opentab": opentab,
+    #"scrsize": size,
     "templates": gamelist2,  # it's like gamelist but shows only read-only games
     "tp": tp,
 
-    # temp
+    "signup": signup_cmd,
+    # related to the crypto bridge
     "deposit": get_n_sign_xdr,
+    "withdraw": request_aqua_payment,
 }
 
 
 def webctx():
-    return False
-    # return katasdk.runs_in_web()
+    return False  # katasdk.runs_in_web()
 
 
 if not webctx():
@@ -695,7 +748,7 @@ class ExtraLayerView(ReceiverObj):
 
         elif ev.type == EngineEvTypes.PAINT:
             global ingame_console
-            #ev.screen.fill('navyblue')
+            # ev.screen.fill('navyblue')
             try:
                 self.console.draw()  # console draw
             except ValueError:
@@ -709,19 +762,17 @@ class ExtraLayerView(ReceiverObj):
 
 
 class ExtraGuiLayerCtrl(ReceiverObj):
-    def __init__(self,):
+    def __init__(self, ):
         super().__init__()
         self.mode = 'legacy'  # you can set this var to 'modern' to use Terminal events instead of F1 to open
 
     def proc_event(self, ev, source=None):
-        global ingame_console
+        global ingame_console, active_gui_overlay
 
         if ev.type == pygame.KEYDOWN:
             if ev.key == pygame.K_ESCAPE:
-                if ingame_console.active:
-                    print('desactivation console')
-                    ingame_console.desactivate()
-
+                pass
+            else:
             # ----------------------------------
             #  uncomment this if you need to refine the megaoptim stuff
             # ----------------------------------
@@ -737,18 +788,14 @@ class ExtraGuiLayerCtrl(ReceiverObj):
             # elif ev.key == pygame.K_DOWN:
             #     kengi.isometric.IsometricMapViewer.FLOOR_MAN_OFFSET[0][1] -= 1
             #     print(kengi.isometric.IsometricMapViewer.FLOOR_MAN_OFFSET)
-            elif ev.key == pygame.K_F4:
-                game_exit(None)
-                game_enter(glvars.ref_vmstate)
-                # kengi.screen_param('hd')
-                # newscr = kengi.get_surface()
-                # paint_event.screen = newscr
-                # map_viewer.screen = newscr
 
-            else:
+            # elif ev.key == pygame.K_F4:
+            #     game_exit(None)
+            #     game_enter(glvars.ref_vmstate)
                 ingame_console.process_input([ev, ])  # ne sais pas cmt gerer ca autrement
 
         elif ev.type == MyEvTypes.TerminalStarts:
+            active_gui_overlay = True
             ingame_console.activate()
 
         elif ev.type == MyEvTypes.SlotMachineStarts:
@@ -766,60 +813,83 @@ class ExtraGuiLayerCtrl(ReceiverObj):
 # ------------- util class for movement -------------
 class MovementPath:
     def __init__(self, mapob, dest, mymap):
-        self.mapob = mapob
+        self.mob_entity = mapob
         self.dest = dest
-        self.goal = None
+        print(dest)
+        # self.goal = None
         self.mymap = mymap
         blocked_tiles = set()
-        obgroup = list(mymap.objectgroups.values())[0]
-        for ob in obgroup.contents:
-            if ob is not mapob:
-                blocked_tiles.add((ob.x, ob.y))
-                if self.pos_to_index((ob.x, ob.y)) == self.pos_to_index(dest):
-                    self.goal = ob
+        # obgroup = list(mymap.objectgroups.values())[0]
+        # for ob in obgroup.contents:
+        #     if ob is not mapob:
+        #         blocked_tiles.add((ob.x, ob.y))
+        #         if self.pos_to_index((ob.x, ob.y)) == self.pos_to_index(dest):
+        #             self.goal = ob
+        a2 = self.pos_to_index((mapob.x, mapob.y))
+        a3 = self.pos_to_index(dest)
+        print('astar creation: args a2, a3 are:', a2, a3)
+
         self.path = pathfinding.AStarPath(
-            mymap, self.pos_to_index((mapob.x, mapob.y)), self.pos_to_index(dest), self.tile_is_blocked,
-            mymap.clamp_pos_int, blocked_tiles=blocked_tiles, wrap_x=mymap.wrap_x, wrap_y=mymap.wrap_y
+            mymap, a2, a3, self.tile_is_blocked,
+            mymap.clamp_pos_int,
+            blocked_tiles=blocked_tiles,
+            wrap_x=mymap.wrap_x, wrap_y=mymap.wrap_y
         )
-        if not self.path.results:
-            print("No path found!")
+
         if self.path.results:
             self.path.results.pop(0)
-        self.all_the_way_to_dest = not (dest in blocked_tiles or self.tile_is_blocked(mymap, *self.pos_to_index(dest)))
-        if self.path.results and not self.all_the_way_to_dest:
-            self.path.results.pop(-1)
-        self.animob = None
+            self.all_the_way_to_dest = not (
+                    dest in blocked_tiles or self.tile_is_blocked(mymap, *self.pos_to_index(dest))
+            )
+            if not self.all_the_way_to_dest:
+                self.path.results.pop(-1)
+        else:
+            print("No path found!")
+
+        self.movement_type = None
 
     @staticmethod
     def pos_to_index(pos):
-        x = math.floor(pos[0])
-        y = math.floor(pos[1])
-        return x, y
+        def spefilter(val):
+            xinf, xmid, xsup = math.floor(val), math.floor(val) + 0.5, math.ceil(val)
+            a, b, c = abs(val - xinf), abs(val - xmid), abs(val - xsup)
+            if c < a:
+                if c < b:
+                    rez = xsup
+                else:
+                    rez = xmid
+            else:
+                if a < b:
+                    rez = xinf
+                else:
+                    rez = xmid
+            return rez
+
+        return spefilter(pos[0]), spefilter(pos[1])
 
     @staticmethod
     def tile_is_blocked(mymap, x, y):
         return mymap.tile_is_blocked(x, y)
 
     def __call__(self):
-        # Called once per update; returns True when the action is completed.
-        if self.animob:
-            self.animob.update()
-            if self.animob.needs_deletion:
-                self.animob = None
-        if not self.animob:
+        # called once per update; returns True when the action is completed.
+        if self.movement_type:
+            self.movement_type.update()
+            if self.movement_type.needs_deletion:
+                self.movement_type = None
+
+        if not self.movement_type:
             if self.path.results:
                 if len(self.path.results) == 1 and self.all_the_way_to_dest:
                     nx, ny = self.dest
                     self.path.results = []
                 else:
                     nx, ny = self.path.results.pop(0)
-
                 # De-clamp the nugoal coordinates.
-                nx = min([nx, nx - self.mymap.width, nx + self.mymap.width], key=lambda x: abs(x - self.mapob.x))
-                ny = min([ny, ny - self.mymap.height, ny + self.mymap.height], key=lambda y: abs(y - self.mapob.y))
-
-                self.animob = animobs.MoveModel(
-                    self.mapob, dest=(nx, ny), speed=0.25
+                nx = min([nx, nx - self.mymap.width, nx + self.mymap.width], key=lambda x: abs(x - self.mob_entity.x))
+                ny = min([ny, ny - self.mymap.height, ny + self.mymap.height], key=lambda y: abs(y - self.mob_entity.y))
+                self.movement_type = animobs.MoveModel(
+                    self.mob_entity, dest=(nx, ny), speed=0.25
                 )
             else:
                 return True
@@ -830,10 +900,11 @@ class MovementPath:
 # --------------------------------------------
 class BasicCtrl(kengi.event.EventReceiver):
     def proc_event(self, event, source):
-        global map_viewer, isomap_player_entity, current_tilemap, current_path, conv_viewer, conversation_ongoing
+        global map_viewer, isomap_player_entity, current_tilemap, current_path, conv_viewer
+        global fps_show, active_gui_overlay
 
         if event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONUP):
-            if conversation_ongoing:
+            if active_gui_overlay:
                 pass  # block all movement when the conversation is active
             else:
                 cursor = map_viewer.cursor
@@ -843,18 +914,22 @@ class BasicCtrl(kengi.event.EventReceiver):
                     # TODO: There are some glitches in the movement system, when the player character will not move to
                     # a tile that has been clicked. It generally happens with tiles that are adjacent to the PC's
                     # current position, but it doesn't happen all the time. I will look into this later.
-                    current_path = MovementPath(isomap_player_entity, map_viewer.cursor.get_pos(), maps[current_tilemap])
-                    if DEBUG:
-                        print('movement path has been set')
+                    current_path = MovementPath(isomap_player_entity, map_viewer.cursor.get_pos(),
+                                                maps[current_tilemap])
+                    print('movement path has been set')
 
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                if conversation_ongoing:
-                    # abort
-                    self.pev(EngineEvTypes.CONVENDS)
+            if event.key == pygame.K_F4:
+                fps_show = not fps_show
+
+            elif event.key == pygame.K_ESCAPE:
+                if ingame_console.active:
+                    ingame_console.desactivate()
+                    active_gui_overlay = False
+                elif active_gui_overlay:  # means it was an active convo
+                    self.pev(EngineEvTypes.CONVENDS)  # stop convo
 
             elif event.key == pygame.K_F2:
-                print('sig start term! its debug mode')
                 self.pev(MyEvTypes.TerminalStarts)
 
             elif event.key == pygame.K_TAB and current_tilemap in (0, 1):
@@ -880,7 +955,7 @@ class BasicCtrl(kengi.event.EventReceiver):
                 glvars.ref_vmstate.landing_spot = event.portal_lcell
 
         elif event.type == EngineEvTypes.CONVSTARTS:
-            conversation_ongoing = True
+            active_gui_overlay = True
             dialogue.ConversationView.BG_COL = '#352879'  # replace with a purple that matches portraits
 
             conv_viewer = dialogue.ConversationView(
@@ -895,18 +970,21 @@ class PathCtrl(kengi.event.EventReceiver):
         super().__init__()
 
     def proc_event(self, event, source):
-        global current_path, conv_viewer, conversation_ongoing
+        global current_path, conv_viewer, active_gui_overlay
 
         if event.type == EngineEvTypes.LOGICUPDATE:
             if current_path is not None:
-                ending_reached = current_path()
-                if ending_reached:
-                    if current_path.goal and hasattr(current_path.goal, "bump"):
-                        current_path.goal.bump()
+                mvt_ended = current_path()
+                if mvt_ended:
                     current_path = None
+                    # TODO call .pev if the player steps on a trigger, at the end of his travel.
+                    needle = (isomap_player_entity.x, isomap_player_entity.y)
+                    print('finpath - ', needle)
+                    if needle in TriggerEntity.all_locations:
+                        TriggerEntity.by_location(needle).bump()
 
         elif event.type == EngineEvTypes.CONVENDS:
-            conversation_ongoing = False  # unlock player movements
+            active_gui_overlay = False  # unlock player movements
             if conv_viewer.active:
                 conv_viewer.turn_off()
 
@@ -1604,12 +1682,9 @@ class PokerState(BaseGameState):
 # -------------------------------
 #  base functions for katasdk compatibility
 # -------------------------------
-
-
-# - to add in web ctx
 # @katasdk.tag_gameenter
 def game_enter(vmstate):
-    global mger, scr, paint_event, lu_event
+    global mger, scr, paint_event, lu_event, gft
 
     # bind vmstate to glvars, update glvars accordingly
     # bind vmstate to glvars, update glvars accordingly
@@ -1622,15 +1697,10 @@ def game_enter(vmstate):
     else:
         print('----- running niobe without VM -------')
 
-    # ---------------- DEEP HACK (by Tom)---------------
-    # if katasdk.runs_in_web():
-    # katasdk.kengi.pygame.bridge.jsbackend_cls.set_crt_filter(True)
-
     kengi.init(3)
-
     IsoViewCls = kengi.isometric.IsometricMapViewer
     # enable mega-optim (pre-rendered floor)
-    # + fine-tune offset to display the very large city.png img...
+    # + fine-tune offset to display the latest(august) VERY large city.png img...
     IsoViewCls.MEGAOPTIM = True
     IsoViewCls.FLOOR_MAN_OFFSET[0] = [1984, 95]
 
@@ -1653,9 +1723,9 @@ def game_enter(vmstate):
 
     # IN CASE YOU DEBUG POKER ::
     # mger.post(CgmEvent(MyEvTypes.SlotMachineStarts))
+    gft = pygame.font.Font(None, 18)
 
 
-# webctx
 # @katasdk.tag_gameupdate
 def game_update(infot=None):
     global lu_event, paint_event, mger, keep_going
@@ -1669,15 +1739,20 @@ def game_update(infot=None):
     if glvars.interruption:
         print('game_update returns ', glvars.interruption)
         return glvars.interruption
+
+    if fps_show:
+        lbl = gft.render('{:.2f}'.format(clock.get_fps()), 0, (0,0,0), (233, 233, 200))
+        scr.blit(lbl, (4, 4))
+
     kengi.flip()
-    clock.tick(MAX_FPS)
+    if glvars.MAXFPS:
+        clock.tick(glvars.MAXFPS)
+    else:
+        clock.tick()
 
 
-# web ctx
 # @katasdk.tag_gameexit
 def game_exit(vmstate):
-    # katasdk.kengi.pygame.bridge.jsbackend_cls.set_crt_filter(False)
-
     kengi.quit()
 
 
