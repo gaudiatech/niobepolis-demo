@@ -8,17 +8,18 @@ import math
 import re
 import time
 import json
-import katagames_sdk as katasdk
 
-# katasdk.bootstrap()
-# import katagames_engine as kengi
-# kengi = katasdk.kengi
 
 # - global constants
 WARP_BACK = [2, 'editor']
 DEBUG = False
 DEFAULT_SPAWN_LOC = [0, 16, 14]
+DELAY_BEFORE_TP = 2.5  # sec
 
+TRIG_LABEL_COLOR = kengi.pal.punk['flashypink'] # instead of (133, 5, 187)
+TRIG_LABEL_FTSIZE = 16
+
+the_future_game = None
 
 GameStates = kengi.struct.enum(
     'Explore',
@@ -90,7 +91,7 @@ keep_going = True
 
 
 class GlVarsMockup:
-    MAXFPS = None  # <- no capping , 120
+    MAXFPS = 74
 
     PALIAS = {
         'greetings': 'assets/greetings.png',
@@ -110,6 +111,10 @@ class GlVarsMockup:
         self.assoc_portal_game.clear()
         for portal_id, cart_name in ref_li:
             self.assoc_portal_game[portal_id] = cart_name
+        #print('-------- portals set: ---------')
+        #print(self.assoc_portal_game)
+        for entityobj in TriggerEntity.entities_for_portals.values():
+            entityobj.refresh_label()
 
 
 glvars = GlVarsMockup()
@@ -141,11 +146,13 @@ def _init_specific_stuff(refscr):
         left_scroll_key=pygame.K_LEFT, right_scroll_key=pygame.K_RIGHT
     )
     map_viewer.pc_cls = Character
+    map_viewer.show_avatar = True
+    map_viewer.set_av_anim_speed(11.77)
 
     # - add map entities
     if glvars.ref_vmstate and glvars.ref_vmstate.landing_spot:
-        print('drop player to alternative spot')
         landing_loc = glvars.ref_vmstate.landing_spot
+        print('drop player to alternative spot: ', landing_loc)
     else:
         print('drop player to default spawn location')
         landing_loc = DEFAULT_SPAWN_LOC  # default location
@@ -200,21 +207,48 @@ class Character(IsoMapObject):
 class TriggerEntity(IsoMapObject):
     SPR_SHEET = None
     all_locations = dict()
+    entities_for_portals = dict()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.drawingoffset = [-16, 0]
 
-        self.__class__.all_locations[(self.x, self.y)] = self
-        if self.__class__.SPR_SHEET is None:
-            self.__class__.SPR_SHEET = kengi.gfx.Spritesheet("assets/flashy-trigger.png")
-            self.__class__.SPR_SHEET.set_infos((32, 16))
+        cls = self.__class__
+        cls.all_locations[(self.x, self.y)] = self
+        if cls.SPR_SHEET is None:
+            cls.SPR_SHEET = kengi.gfx.Spritesheet("assets/flashy-trigger.png")
+            cls.SPR_SHEET.set_infos((32, 16))
+            for k_elt in range(cls.SPR_SHEET.card):
+                cls.SPR_SHEET[k_elt].set_colorkey('BLACK')  # so the alpha is respected in local ctx
         self.emitter = CogObject()
         # pr gerer anim
         # --
         self.frame = -1
         self.phase_thresh = 8
         self.phase = self.phase_thresh
+
+        # if its a portal-bound trigger, (goto:portal)
+        # we WILL also display the name of the game
+        self.triggerft = self.lbl = None
+        if self.properties['goto'] == 'portal':
+            x = int(self.properties['ident'])
+            self.__class__.entities_for_portals[x] = self
+
+    def refresh_label(self):
+        if self.properties['goto'] == 'portal':
+            self.triggerft = pygame.font.Font(None, TRIG_LABEL_FTSIZE)
+            x = self.properties['ident']
+            if x in glvars.assoc_portal_game:
+                game_name = glvars.assoc_portal_game[x]
+            else:
+                game_name = '%void%'
+            self.lbl = self.triggerft.render(game_name, False, TRIG_LABEL_COLOR, kengi.pal.c64['blue'])
+            self.txtoffset = [
+                16,
+                -4-5*self.lbl.get_height()
+            ]
+        else:
+            self.triggerft = self.lbl = None
 
     @classmethod
     def by_location(cls, known_pos):
@@ -226,10 +260,18 @@ class TriggerEntity(IsoMapObject):
             self.phase = 0
             self.frame = (self.frame + 1) % self.SPR_SHEET.card
         # --
+        midbottom_p = (sx +self.drawingoffset[0], sy+self.drawingoffset[1])
         dest_surface.blit(
             self.SPR_SHEET[self.frame],
-            (sx +self.drawingoffset[0], sy+self.drawingoffset[1])  # anchor=midbottom -> it was manually computed
+            midbottom_p  # like anchor=midbottom, but was manually computed
         )
+        # if its a portal-bound trigger, (goto:portal)
+        # we also display the name of the game
+        if self.lbl:
+            dest_surface.blit(
+                self.lbl,
+                (midbottom_p[0]+self.txtoffset[0], midbottom_p[1]+self.txtoffset[1])
+            )
 
     def bump(self):
         # prevent invisble triggers:
@@ -265,12 +307,16 @@ class GlowingPortal(IsoMapObject):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.drawoffset = [-16, -16]
+        self.drawoffset = [-32, -48]
         self.emitter = CogObject()
-        if self.__class__.PORTAL_SPR_SHEET is None:
-            sprsheet_obj = kengi.gfx.Spritesheet("assets/portalRings2.png")
-            self.__class__.PORTAL_SPR_SHEET = sprsheet_obj
-            self.__class__.PORTAL_SPR_SHEET.set_infos((32, 32))
+        cls = self.__class__
+        if cls.PORTAL_SPR_SHEET is None:
+            sprsheet_obj = kengi.gfx.Spritesheet("assets/portalSF.png")
+            cls.PORTAL_SPR_SHEET = sprsheet_obj
+            cls.PORTAL_SPR_SHEET.set_infos((64, 64))
+            for k_elt in range(cls.PORTAL_SPR_SHEET.card):
+                cls.PORTAL_SPR_SHEET[k_elt].set_colorkey('BLACK')  # so the alpha is respected in local ctx
+
         # animated spr
         self.frame = -1
         self.phase_thresh = 14
@@ -316,7 +362,6 @@ OBJECT_CLASSES = {
 #   declarations: IN GAME console
 # --------------------------------------------------
 ingame_console = None
-isomap_viewer = None
 to_edit = None
 leaving_niobe = False
 
@@ -722,7 +767,7 @@ console_functions_listing = {
 
 
 def webctx():
-    return False  # katasdk.runs_in_web()
+    return False #katasdk.runs_in_web()
 
 
 if not webctx():
@@ -736,15 +781,24 @@ class ExtraLayerView(ReceiverObj):
         super().__init__()
         self.console = cons
         self.img_fps = None
-        self.ft = None
+        self.ft = pygame.font.Font(None, 17)
+        self.countdown = None
+        self.last_t = None
 
     def proc_event(self, ev, source=None):
-        global clock
+        global clock, the_future_game
+
         if ev.type == EngineEvTypes.LOGICUPDATE:
-            if not self.ft:
-                self.ft = pygame.font.Font(None, 17)
-            # TODO you can uncomment this to display FPS when benchmarking
-            # self.img_fps = self.ft.render(" {:.2f}fps ".format(clock.get_fps()), 1, (0, 0, 0), (250, 244, 244))
+            # --- showing fps
+            if the_future_game:
+                if self.countdown:
+                    elapsed = ev.curr_t-self.last_t
+                    self.countdown -= elapsed
+                    if not(self.countdown>0):
+                        glvars.interruption = [2, the_future_game]
+                else:
+                    self.countdown = DELAY_BEFORE_TP
+                self.last_t = ev.curr_t
 
         elif ev.type == EngineEvTypes.PAINT:
             global ingame_console
@@ -901,7 +955,7 @@ class MovementPath:
 class BasicCtrl(kengi.event.EventReceiver):
     def proc_event(self, event, source):
         global map_viewer, isomap_player_entity, current_tilemap, current_path, conv_viewer
-        global fps_show, active_gui_overlay
+        global fps_show, active_gui_overlay, the_future_game
 
         if event.type in (pygame.MOUSEMOTION, pygame.MOUSEBUTTONUP, pygame.MOUSEBUTTONUP):
             if active_gui_overlay:
@@ -921,6 +975,10 @@ class BasicCtrl(kengi.event.EventReceiver):
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_F4:
                 fps_show = not fps_show
+
+            if event.key == pygame.K_F3:
+                map_viewer.show_avatar = not map_viewer.show_avatar
+                print(f'show avatar? {map_viewer.show_avatar}')
 
             elif event.key == pygame.K_ESCAPE:
                 if ingame_console.active:
@@ -948,11 +1006,23 @@ class BasicCtrl(kengi.event.EventReceiver):
 
         elif event.type == MyEvTypes.PortalActivates:
             if event.portal_id in glvars.assoc_portal_game:
-                dest_game = glvars.assoc_portal_game[event.portal_id]
+                the_future_game = glvars.assoc_portal_game[event.portal_id]
                 # save data
-                glvars.interruption = [2, dest_game]
-                print('lcell -> ', event.portal_lcell)
                 glvars.ref_vmstate.landing_spot = event.portal_lcell
+
+                # launch the TP fancy anim!
+                map_viewer.show_avatar = False
+                # fine tune gfx
+                map_viewer.anim_av_offset[0] = -16
+                map_viewer.anim_av_offset[1] = -20
+
+                s_obj = kengi.gfx.Spritesheet("assets/tpanim1.png")
+                s_obj.set_infos((32, 32))
+                for k_elt in range(s_obj.card):
+                    s_obj[k_elt].set_colorkey('BLACK')  # respect alpha in local ctx...
+                map_viewer.extra_anim = s_obj
+
+                print('portal has been turned on! lcell=', event.portal_lcell)
 
         elif event.type == EngineEvTypes.CONVSTARTS:
             active_gui_overlay = True
@@ -1688,12 +1758,13 @@ def game_enter(vmstate):
 
     # bind vmstate to glvars, update glvars accordingly
     # bind vmstate to glvars, update glvars accordingly
+    tmpportals = None
     if vmstate:
         glvars.ref_vmstate = vmstate
         print('* det gamelist xx *')
         glvars.cached_gamelist = vmstate.get_gamelist()
         glvars.ref_vmstate = vmstate
-        glvars.set_portals(vmstate.portals_func())
+        tmpportals = vmstate.portals_func()
     else:
         print('----- running niobe without VM -------')
 
@@ -1719,11 +1790,15 @@ def game_enter(vmstate):
         glvars
     )
     kengi.get_game_ctrl().turn_on()
+
     kengi.get_game_ctrl().init_state0()
 
     # IN CASE YOU DEBUG POKER ::
     # mger.post(CgmEvent(MyEvTypes.SlotMachineStarts))
     gft = pygame.font.Font(None, 18)
+
+    if vmstate:
+        glvars.set_portals(tmpportals)
 
 
 # @katasdk.tag_gameupdate
@@ -1745,7 +1820,7 @@ def game_update(infot=None):
         scr.blit(lbl, (4, 4))
 
     kengi.flip()
-    if glvars.MAXFPS:
+    if (not webctx()) and glvars.MAXFPS:
         clock.tick(glvars.MAXFPS)
     else:
         clock.tick()
