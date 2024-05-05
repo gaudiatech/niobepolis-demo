@@ -147,7 +147,9 @@ def _init_specific_stuff(refscr):
     )
     map_viewer.pc_cls = Character
     map_viewer.show_avatar = True
-    map_viewer.set_av_anim_speed(11.77)
+
+    # TODO  : doesnt work, how to fix?
+    # map_viewer.set_av_anim_speed(11.77)
 
     # - add map entities
     if glvars.ref_vmstate and glvars.ref_vmstate.landing_spot:
@@ -217,7 +219,7 @@ class TriggerEntity(IsoMapObject):
         cls.all_locations[(self.x, self.y)] = self
         if cls.SPR_SHEET is None:
             cls.SPR_SHEET = kengi.gfx.Spritesheet("assets/flashy-trigger.png")
-            cls.SPR_SHEET.set_infos((32, 16))
+            cls.SPR_SHEET.tilesize = (32, 16)
             for k_elt in range(cls.SPR_SHEET.card):
                 cls.SPR_SHEET[k_elt].set_colorkey('BLACK')  # so the alpha is respected in local ctx
         self.emitter = CogObject()
@@ -230,9 +232,14 @@ class TriggerEntity(IsoMapObject):
         # if its a portal-bound trigger, (goto:portal)
         # we WILL also display the name of the game
         self.triggerft = self.lbl = None
-        if self.properties['goto'] == 'portal':
-            x = int(self.properties['ident'])
-            self.__class__.entities_for_portals[x] = self
+
+        #print(self.properties)
+
+        # TODO this doesnt work, how to fix?
+
+        #if self.properties['goto'] == 'portal':
+        #    x = int(self.properties['ident'])
+        #    self.__class__.entities_for_portals[x] = self
 
     def refresh_label(self):
         if self.properties['goto'] == 'portal':
@@ -313,7 +320,8 @@ class GlowingPortal(IsoMapObject):
         if cls.PORTAL_SPR_SHEET is None:
             sprsheet_obj = kengi.gfx.Spritesheet("assets/portalSF.png")
             cls.PORTAL_SPR_SHEET = sprsheet_obj
-            cls.PORTAL_SPR_SHEET.set_infos((64, 64))
+            print(dir(cls.PORTAL_SPR_SHEET))
+            cls.PORTAL_SPR_SHEET.tilesize = (64, 64)
             for k_elt in range(cls.PORTAL_SPR_SHEET.card):
                 cls.PORTAL_SPR_SHEET[k_elt].set_colorkey('BLACK')  # so the alpha is respected in local ctx
 
